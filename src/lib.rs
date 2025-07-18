@@ -180,7 +180,7 @@ impl WiimClient {
         let base_url = if ip_address.starts_with("http") {
             ip_address.to_string()
         } else {
-            format!("https://{}", ip_address)
+            format!("https://{ip_address}")
         };
 
         // Configure client to accept self-signed certificates (WiiM devices use them)
@@ -227,7 +227,7 @@ impl WiimClient {
         self.base_url = if ip_address.starts_with("http") {
             ip_address.to_string()
         } else {
-            format!("https://{}", ip_address)
+            format!("https://{ip_address}")
         };
     }
 
@@ -260,7 +260,7 @@ impl WiimClient {
     }
 
     async fn send_command(&self, command: &str) -> Result<String> {
-        let url = format!("{}/httpapi.asp?command={}", self.base_url, command);
+        let url = format!("{}/httpapi.asp?command={command}", self.base_url);
         let response = self.client.get(&url).send().await?;
         let text = response.text().await?;
         Ok(text)
@@ -347,7 +347,7 @@ impl WiimClient {
                 "Volume must be 0-100".to_string(),
             ));
         }
-        let command = format!("setPlayerCmd:vol:{}", volume);
+        let command = format!("setPlayerCmd:vol:{volume}");
         self.send_command(&command).await?;
         Ok(())
     }
@@ -449,14 +449,14 @@ mod tests {
         let valid_volumes = [0, 1, 50, 99, 100];
         for volume in valid_volumes {
             // The validation logic: if volume > 100
-            assert!(volume <= 100, "Volume {} should be valid", volume);
+            assert!(volume <= 100, "Volume {volume} should be valid");
         }
 
         // These values should fail the validation check (volume > 100)
         let invalid_volumes = [101, 150, 200, 255];
         for volume in invalid_volumes {
             // The validation logic: if volume > 100
-            assert!(volume > 100, "Volume {} should be invalid", volume);
+            assert!(volume > 100, "Volume {volume} should be invalid");
         }
     }
 

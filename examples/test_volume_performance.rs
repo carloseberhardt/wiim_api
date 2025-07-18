@@ -24,7 +24,7 @@ async fn main() -> Result<()> {
     let start = Instant::now();
     let status = client.get_player_status().await?;
     let current: u8 = status.vol.parse().map_err(|_| {
-        wiim_api::WiimError::InvalidResponse(format!("Invalid volume: {}", status.vol))
+        wiim_api::WiimError::InvalidResponse(format!("Invalid volume: {vol}", vol = status.vol))
     })?;
     client.set_volume(current + 1).await?;
     let manual_same_client_time = start.elapsed();
@@ -38,7 +38,7 @@ async fn main() -> Result<()> {
     let client1 = WiimClient::new("192.168.86.52");
     let status = client1.get_player_status().await?;
     let current: u8 = status.vol.parse().map_err(|_| {
-        wiim_api::WiimError::InvalidResponse(format!("Invalid volume: {}", status.vol))
+        wiim_api::WiimError::InvalidResponse(format!("Invalid volume: {vol}", vol = status.vol))
     })?;
     let client2 = WiimClient::new("192.168.86.52");
     client2.set_volume(current + 1).await?;
