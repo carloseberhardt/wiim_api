@@ -35,8 +35,8 @@ Thumbs.db
 lcov.info
 coverage/
 
-# Documentation (reference only)
-docs/
+# Internal Documentation (reference only)
+internal_docs/
 
 # Claude Code
 .claude/

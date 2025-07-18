@@ -192,6 +192,8 @@ The `examples/` directory contains:
 - `test_device.rs` - Test connection and get device info
 - `test_controls.rs` - Test all playback and volume controls
 - `test_metadata.rs` - Explore all available metadata fields
+- `TEMPLATE_USAGE.md` - Template system usage guide
+- `template_config.toml` - Example template configuration
 - `waybar_config.json` - Example waybar configuration
 
 Run examples with:
@@ -199,9 +201,18 @@ Run examples with:
 cargo run --example basic_usage
 ```
 
+**Template Examples:**
+```bash
+# View current template configuration
+cat examples/template_config.toml
+
+# Test template system
+wiim-control --config examples/template_config.toml --profile polybar status
+```
+
 ## CLI Tool
 
-The library includes a `wiim-control` CLI tool for integration with status bars and automation:
+The library includes a `wiim-control` CLI tool with **powerful template system** for integration with status bars and automation:
 
 ```bash
 # Install the CLI tool
@@ -216,9 +227,142 @@ wiim-control volume 75                 # Set volume
 wiim-control volume-up                 # Increase volume by 5
 wiim-control volume-down 10            # Decrease volume by 10
 
+# Template system - NEW!
+wiim-control --profile waybar status       # Status bar integration
+wiim-control --profile polybar status      # Polybar integration
+wiim-control --profile i3blocks status     # i3blocks integration
+wiim-control --profile custom --template "{artist} - {title} {quality_info}" status
+
 # Configuration
-~/.config/wiim-control/config.toml     # Auto-created config file
+~/.config/wiim-control/config.toml     # Auto-created config file with template support
 ```
+
+### Template System
+
+The CLI tool features a **comprehensive template system** for customizable output:
+
+#### Quick Examples
+
+**Basic Status Bar Integration:**
+```bash
+# Waybar
+wiim-control --profile waybar status
+
+# Polybar
+wiim-control --profile polybar status
+
+# i3blocks
+wiim-control --profile i3blocks status
+```
+
+**Custom Templates:**
+```bash
+# Artist and title with quality
+wiim-control --profile custom --template "{artist} - {title} {quality_info}" status
+
+# Volume-focused display
+wiim-control --profile custom --template "{track_info} | {volume}%" status
+
+# Audiophile format
+wiim-control --profile custom --template "♪ {artist} - {title} • {sample_rate_khz}/{bit_depth_bit}" status
+```
+
+#### Template Variables
+
+Rich set of variables for customization:
+
+**Track Information:**
+- `{artist}`, `{title}`, `{album}`, `{album_art_uri}`
+
+**Playback State:**
+- `{state}` (playing/paused/stopped/loading)
+- `{volume}`, `{muted}`, `{position}`, `{duration}`
+
+**Audio Quality:**
+- `{sample_rate}`, `{bit_depth}`, `{quality_info}`
+- `{sample_rate_khz}` (formatted as "192kHz")
+- `{bit_depth_bit}` (formatted as "24bit")
+
+**Smart Combinations:**
+- `{track_info}` - Smart artist-title fallback
+- `{full_info}` - Complete info for tooltips
+
+#### Configuration
+
+**Basic Template Configuration:**
+```toml
+# ~/.config/wiim-control/config.toml
+device_ip = "192.168.1.100"
+
+[output.text]
+playing = "▶️ {artist} - {title} {quality_info}"
+paused = "⏸️ {artist} - {title}"
+stopped = "⏹️ No music"
+loading = "⏳ Loading..."
+
+[output.json]
+text = "{artist} - {title}"
+alt = "{state}"
+tooltip = "{full_info}"
+class = "{state}"
+percentage = "{volume}"
+
+[profiles.waybar]
+format = "json"
+
+[profiles.polybar]
+format = "text"
+text_template = "{artist} - {title} [{quality_info}]"
+```
+
+#### Status Bar Integration
+
+**Waybar Example:**
+```json
+{
+    "custom/music": {
+        "exec": "wiim-control --profile waybar status",
+        "return-type": "json",
+        "interval": 1,
+        "on-click": "wiim-control toggle",
+        "format": "{text}",
+        "tooltip": true
+    }
+}
+```
+
+**Polybar Example:**
+```ini
+[module/music]
+type = custom/script
+exec = wiim-control --profile polybar status
+interval = 1
+click-left = wiim-control toggle
+```
+
+**i3blocks Example:**
+```ini
+[music]
+command=wiim-control --profile i3blocks status
+interval=1
+signal=10
+```
+
+### Template Documentation
+
+Comprehensive documentation for the template system:
+
+- **[Template System Overview](docs/templates/README.md)** - Getting started guide
+- **[Template Variables Reference](docs/templates/variables.md)** - Complete variable documentation
+- **[Configuration Examples](docs/templates/examples.md)** - Sample configurations
+
+### Status Bar Integration Guides
+
+Step-by-step setup guides for popular status bars:
+
+- **[Waybar Integration](docs/integrations/waybar.md)** - Wayland status bar
+- **[Polybar Integration](docs/integrations/polybar.md)** - Flexible status bar
+- **[i3blocks Integration](docs/integrations/i3blocks.md)** - i3 window manager status line
 
 ## Error Handling
 
