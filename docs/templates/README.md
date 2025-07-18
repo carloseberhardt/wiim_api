@@ -304,7 +304,6 @@ This shows the current data structure with all available fields.
 
 - [Template Variables Reference](variables.md) - Complete variable documentation
 - [Configuration Examples](examples.md) - Sample configurations
-- [Audio Quality Guide](audio-quality.md) - Understanding quality indicators
 - [Integration Guides](../integrations/) - Status bar setup guides
 
 ## Getting Help

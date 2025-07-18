@@ -355,7 +355,6 @@ Comprehensive documentation for the template system:
 - **[Template System Overview](docs/templates/README.md)** - Getting started guide
 - **[Template Variables Reference](docs/templates/variables.md)** - Complete variable documentation
 - **[Configuration Examples](docs/templates/examples.md)** - Sample configurations
-- **[Audio Quality Guide](docs/templates/audio-quality.md)** - Understanding quality indicators
 
 ### Status Bar Integration Guides
 

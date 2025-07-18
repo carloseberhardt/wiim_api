@@ -122,13 +122,20 @@ Use these variables in your templates by wrapping them in double curly braces: `
 - **Type**: Optional String
 - **Description**: Raw sample rate in Hz
 - **Example**: `"192000"` (192 kHz)
-- **Common Values**: `"44100"`, `"48000"`, `"96000"`, `"192000"`
+- **Common Values**:
+  - `"44100"` - CD quality
+  - `"48000"` - Professional standard
+  - `"96000"` - High-resolution
+  - `"192000"` - Ultra high-resolution
 
 #### `{bit_depth}`
 - **Type**: Optional String
 - **Description**: Raw bit depth value
 - **Example**: `"24"` (24-bit)
-- **Common Values**: `"16"`, `"24"`, `"32"`
+- **Common Values**:
+  - `"16"` - CD quality, most streaming
+  - `"24"` - Professional/high-resolution
+  - `"32"` - Professional mastering
 
 #### `{sample_rate_khz}`
 - **Type**: Optional String
@@ -145,6 +152,11 @@ Use these variables in your templates by wrapping them in double curly braces: `
 - **Type**: Optional String
 - **Description**: Combined sample rate and bit depth information
 - **Example**: `"192kHz/24bit"`
+- **Common Quality Levels**:
+  - `"44kHz/16bit"` - CD quality (standard)
+  - `"48kHz/24bit"` - Professional audio
+  - `"96kHz/24bit"` - High-resolution audio
+  - `"192kHz/24bit"` - Ultra high-resolution
 - **Note**: Only available when both sample rate and bit depth are present
 
 ### Formatted Combinations
@@ -238,5 +250,4 @@ The system validates template syntax at runtime. Invalid templates will result i
 
 - [Template System Overview](README.md)
 - [Configuration Examples](examples.md)
-- [Audio Quality Guide](audio-quality.md)
 - [Integration Guides](../integrations/)

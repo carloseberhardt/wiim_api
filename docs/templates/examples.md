@@ -487,5 +487,4 @@ wiim-control status --profile notify
 
 - [Template Variables Reference](variables.md) - Complete variable documentation
 - [Template System Overview](README.md) - System overview and concepts
-- [Audio Quality Guide](audio-quality.md) - Understanding quality indicators
 - [Integration Guides](../integrations/) - Status bar setup guides
