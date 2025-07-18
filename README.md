@@ -2,19 +2,19 @@
 
 [![Crates.io](https://img.shields.io/crates/v/wiim_api.svg)](https://crates.io/crates/wiim_api)
 [![Documentation](https://docs.rs/wiim_api/badge.svg)](https://docs.rs/wiim_api)
-[![License](https://img.shields.io/badge/license-MIT%20OR%20Apache--2.0-blue.svg)](https://github.com/your-username/wiim_api#license)
+[![License](https://img.shields.io/badge/license-MIT%20OR%20Apache--2.0-blue.svg)](https://github.com/carloseberhardt/wiim_api#license)
 
 A Rust library for controlling WiiM audio streaming devices via their HTTP API.
 
 ## Features
 
-- 🎵 **Now Playing Info** - Get current track metadata including title, artist, album, and cover art
-- ⏯️ **Playback Control** - Play, pause, stop, next/previous track
-- 🔊 **Volume Control** - Set volume (0-100), mute/unmute
-- 🔗 **Connection Management** - Test connectivity and configure target IP
-- 🛡️ **Async & Safe** - Built with `tokio` and proper error handling
+- **Now Playing Info** - Get current track metadata including title, artist, album, and cover art
+- **Playback Control** - Play, pause, stop, next/previous track
+- **Volume Control** - Set volume (0-100), mute/unmute
+- **Connection Management** - Test connectivity and configure target IP
+- **Async & Safe** - Built with `tokio` and proper error handling
 
-## Quick Start
+## Installation
 
 Add this to your `Cargo.toml`:
 
@@ -24,69 +24,23 @@ wiim_api = "0.1"
 tokio = { version = "1.0", features = ["full"] }
 ```
 
-### Basic Usage
+## Usage
 
 ```rust
 use wiim_api::{WiimClient, Result};
 
 #[tokio::main]
 async fn main() -> Result<()> {
-    // Connect to your WiiM device
     let client = WiimClient::connect("192.168.1.100").await?;
 
-    // Get now playing information
     let now_playing = client.get_now_playing().await?;
-    println!("♪ {} - {}",
+    println!("{} - {}",
         now_playing.artist.unwrap_or_default(),
         now_playing.title.unwrap_or_default()
     );
 
-    // Control playback
     client.set_volume(75).await?;
     client.pause().await?;
-
-    Ok(())
-}
-```
-
-### Advanced Usage
-
-```rust
-use wiim_api::{WiimClient, PlayState};
-
-#[tokio::main]
-async fn main() -> wiim_api::Result<()> {
-    let client = WiimClient::new("192.168.1.100");
-
-    // Test if device is reachable
-    if client.test_connection().await.is_ok() {
-        println!("Device is online!");
-
-        // Get detailed track info
-        let info = client.get_now_playing().await?;
-
-        match info.state {
-            PlayState::Playing => {
-                println!("🎵 Now playing: {} - {}",
-                    info.artist.unwrap_or("Unknown".to_string()),
-                    info.title.unwrap_or("Unknown".to_string())
-                );
-
-                if let Some(cover_url) = info.album_art_uri {
-                    println!("🎨 Album art: {}", cover_url);
-                }
-
-                println!("📊 {}kHz/{}bit • Volume: {}%",
-                    info.sample_rate.unwrap_or_default(),
-                    info.bit_depth.unwrap_or_default(),
-                    info.volume
-                );
-            }
-            PlayState::Paused => println!("⏸️ Playback paused"),
-            PlayState::Stopped => println!("⏹️ Playback stopped"),
-            PlayState::Loading => println!("⏳ Loading..."),
-        }
-    }
 
     Ok(())
 }
@@ -97,26 +51,17 @@ async fn main() -> wiim_api::Result<()> {
 ### Client Creation
 
 ```rust
-// Basic client (provide IP address)
 let client = WiimClient::new("192.168.1.100");
-
-// Connect with validation (tests connection)
 let client = WiimClient::connect("192.168.1.100").await?;
-
-// Change IP address later
-client.set_ip_address("192.168.1.101");
 ```
 
 ### Playback Control
 
 ```rust
-// Basic controls
 client.play().await?;
 client.pause().await?;
 client.stop().await?;
 client.toggle_play_pause().await?;
-
-// Navigation
 client.next_track().await?;
 client.previous_track().await?;
 ```
@@ -124,15 +69,9 @@ client.previous_track().await?;
 ### Volume Control
 
 ```rust
-// Set volume (0-100)
 client.set_volume(75).await?;
-
-// Relative volume changes
-let new_volume = client.volume_up(Some(5)).await?;    // +5, returns new level
-let new_volume = client.volume_down(Some(3)).await?;  // -3, returns new level
-let new_volume = client.volume_up(None).await?;       // +5 default step
-
-// Mute/unmute
+client.volume_up(Some(5)).await?;
+client.volume_down(Some(3)).await?;
 client.mute().await?;
 client.unmute().await?;
 ```
@@ -140,44 +79,39 @@ client.unmute().await?;
 ### Information
 
 ```rust
-// Complete now playing info (recommended)
 let info = client.get_now_playing().await?;
-
-// Raw API responses (advanced)
 let status = client.get_player_status().await?;
 let metadata = client.get_meta_info().await?;
 ```
 
-## Finding Your Device IP
+## Device IP Discovery
 
-Your WiiM device's IP address can be found in several ways:
-
-- **Router admin page** - Usually `192.168.1.1` or `192.168.0.1`
+Find your WiiM device's IP address via:
 - **WiiM Home app** - Settings → Device Info
-- **Network scanner** - Apps like "Fing" or "Advanced IP Scanner"
-- **Command line** - `nmap -sn 192.168.1.0/24` (scan your network)
+- **Router admin page** - Usually `192.168.1.1` or `192.168.0.1`
+- **Network scanner** - Apps like "Fing" or `nmap -sn 192.168.1.0/24`
 
 ## API Coverage
 
 **Current implementation: 52% of WiiM HTTP API**
 
 This library focuses on **playback monitoring and control**. Key implemented features:
-- ✅ Now playing information and track metadata
-- ✅ Playback control (play/pause/stop/next/prev)
-- ✅ Volume control and muting
-- ✅ Connection testing and IP configuration
+- Now playing information and track metadata
+- Playback control (play/pause/stop/next/prev)
+- Volume control and muting
+- Connection testing and IP configuration
 
 **Key limitations:**
-- ❌ Cannot start playback from URLs or playlists
-- ❌ No preset access (quick stations/playlists)
-- ❌ No input source switching (Bluetooth/optical/aux)
-- ❌ No equalizer or device configuration
+- Cannot start playback from URLs or playlists
+- No preset access (quick stations/playlists)
+- No input source switching (Bluetooth/optical/aux)
+- No equalizer or device configuration
 
 See [API_COVERAGE.md](API_COVERAGE.md) for detailed gap analysis and roadmap.
 
 ## Supported Devices
 
-This library should work with all WiiM devices that support the HTTP API:
+This library works with all WiiM devices that support the HTTP API:
 
 - WiiM Mini
 - WiiM Pro
@@ -186,183 +120,13 @@ This library should work with all WiiM devices that support the HTTP API:
 
 ## Examples
 
-The `examples/` directory contains:
+The `examples/` directory contains `basic_usage.rs` - Simple getting started example.
 
-- `basic_usage.rs` - Simple getting started example
-- `test_device.rs` - Test connection and get device info
-- `test_controls.rs` - Test all playback and volume controls
-- `test_metadata.rs` - Explore all available metadata fields
-- `TEMPLATE_USAGE.md` - Template system usage guide
-- `template_config.toml` - Example template configuration
-- `waybar_config.json` - Example waybar configuration
-
-Run examples with:
-```bash
-cargo run --example basic_usage
-```
-
-**Template Examples:**
-```bash
-# View current template configuration
-cat examples/template_config.toml
-
-# Test template system
-wiim-control --config examples/template_config.toml --profile polybar status
-```
+Run examples with: `cargo run --example basic_usage`
 
 ## CLI Tool
 
-The library includes a `wiim-control` CLI tool with **powerful template system** for integration with status bars and automation:
-
-```bash
-# Install the CLI tool
-cargo install --path . --bin wiim-control
-
-# Basic commands
-wiim-control status                    # Show current track (text format)
-wiim-control --format json status     # JSON output for status bars
-wiim-control toggle                    # Play/pause
-wiim-control next                      # Next track
-wiim-control volume 75                 # Set volume
-wiim-control volume-up                 # Increase volume by 5
-wiim-control volume-down 10            # Decrease volume by 10
-
-# Template system - NEW!
-wiim-control --profile waybar status       # Status bar integration
-wiim-control --profile polybar status      # Polybar integration
-wiim-control --profile i3blocks status     # i3blocks integration
-wiim-control --profile custom --template "{artist} - {title} {quality_info}" status
-
-# Configuration
-~/.config/wiim-control/config.toml     # Auto-created config file with template support
-```
-
-### Template System
-
-The CLI tool features a **comprehensive template system** for customizable output:
-
-#### Quick Examples
-
-**Basic Status Bar Integration:**
-```bash
-# Waybar
-wiim-control --profile waybar status
-
-# Polybar
-wiim-control --profile polybar status
-
-# i3blocks
-wiim-control --profile i3blocks status
-```
-
-**Custom Templates:**
-```bash
-# Artist and title with quality
-wiim-control --profile custom --template "{artist} - {title} {quality_info}" status
-
-# Volume-focused display
-wiim-control --profile custom --template "{track_info} | {volume}%" status
-
-# Audiophile format
-wiim-control --profile custom --template "♪ {artist} - {title} • {sample_rate_khz}/{bit_depth_bit}" status
-```
-
-#### Template Variables
-
-Rich set of variables for customization:
-
-**Track Information:**
-- `{artist}`, `{title}`, `{album}`, `{album_art_uri}`
-
-**Playback State:**
-- `{state}` (playing/paused/stopped/loading)
-- `{volume}`, `{muted}`, `{position}`, `{duration}`
-
-**Audio Quality:**
-- `{sample_rate}`, `{bit_depth}`, `{quality_info}`
-- `{sample_rate_khz}` (formatted as "192kHz")
-- `{bit_depth_bit}` (formatted as "24bit")
-
-**Smart Combinations:**
-- `{track_info}` - Smart artist-title fallback
-- `{full_info}` - Complete info for tooltips
-
-#### Configuration
-
-**Basic Template Configuration:**
-```toml
-# ~/.config/wiim-control/config.toml
-device_ip = "192.168.1.100"
-
-[output.text]
-playing = "▶️ {artist} - {title} {quality_info}"
-paused = "⏸️ {artist} - {title}"
-stopped = "⏹️ No music"
-loading = "⏳ Loading..."
-
-[output.json]
-text = "{artist} - {title}"
-alt = "{state}"
-tooltip = "{full_info}"
-class = "{state}"
-percentage = "{volume}"
-
-[profiles.waybar]
-format = "json"
-
-[profiles.polybar]
-format = "text"
-text_template = "{artist} - {title} [{quality_info}]"
-```
-
-#### Status Bar Integration
-
-**Waybar Example:**
-```json
-{
-    "custom/music": {
-        "exec": "wiim-control --profile waybar status",
-        "return-type": "json",
-        "interval": 1,
-        "on-click": "wiim-control toggle",
-        "format": "{text}",
-        "tooltip": true
-    }
-}
-```
-
-**Polybar Example:**
-```ini
-[module/music]
-type = custom/script
-exec = wiim-control --profile polybar status
-interval = 1
-click-left = wiim-control toggle
-```
-
-**i3blocks Example:**
-```ini
-[music]
-command=wiim-control --profile i3blocks status
-interval=1
-signal=10
-```
-
-### Template Documentation
-
-Comprehensive documentation for the template system:
-
-- **[Template System Overview](docs/templates/README.md)** - Getting started guide
-- **[Template Variables Reference](docs/templates/variables.md)** - Complete variable documentation
-- **[Configuration Examples](docs/templates/examples.md)** - Sample configurations
-
-### Status Bar Integration Guides
-
-Step-by-step setup guides for popular status bars:
-
-- **[Waybar Integration](docs/integrations/waybar.md)** - Wayland status bar
-- **[Polybar Integration](docs/integrations/polybar.md)** - Flexible status bar
-- **[i3blocks Integration](docs/integrations/i3blocks.md)** - i3 window manager status line
+This library includes a command-line tool for integration with status bars and automation. For detailed CLI usage, template system, and status bar integration guides, see [CLI.md](CLI.md).
 
 ## Error Handling
 
@@ -381,42 +145,19 @@ match client.get_now_playing().await {
 
 Contributions are welcome! Please feel free to submit a Pull Request.
 
-### Development Setup
+Clone the repository:
+```bash
+git clone https://github.com/carloseberhardt/wiim_api.git
+cd wiim_api
+```
 
-1. **Clone the repository:**
-   ```bash
-   git clone https://github.com/your-username/wiim_api.git
-   cd wiim_api
-   ```
+Install pre-commit hooks:
+```bash
+pip install pre-commit
+pre-commit install
+```
 
-2. **Install pre-commit hooks:**
-   ```bash
-   # Install pre-commit (if not already installed)
-   pip install pre-commit
-   # or on Arch Linux: pacman -S python-pre-commit
-
-   # Install hooks for this repository
-   pre-commit install
-   ```
-
-3. **Make your changes and commit:**
-   ```bash
-   # Pre-commit hooks will automatically run:
-   # - cargo fmt (code formatting)
-   # - cargo clippy (linting)
-   # - Basic file checks
-   git commit -m "Your changes"
-   ```
-
-### Testing Guidelines
-
-- **Prefer unit tests** that don't require actual WiiM devices
-- **Use integration tests sparingly** - name them `test_*_integration`
-- **Run tests:** `cargo test`
-- **Check formatting:** `cargo fmt --check`
-- **Run linter:** `cargo clippy`
-
-The CI will automatically run these checks on your PR.
+Run tests: `cargo test`, `cargo fmt --check`, `cargo clippy`
 
 ## License
 
