@@ -88,11 +88,11 @@ device_ip = "192.168.1.100"
 format = "json"
 
 [output.json]
-text = "{artist} - {title}"
-alt = "{state}"
-tooltip = "{full_info}"
-class = "{state}"
-percentage = "{volume}"
+text = "{{artist}} - {{title}}"
+alt = "{{state}}"
+tooltip = "{{full_info}}"
+class = "{{state}}"
+percentage = "{{volume}}"
 ```
 
 ### Advanced Waybar Module
@@ -131,31 +131,31 @@ percentage = "{volume}"
 #### Minimal Display
 ```toml
 [output.json]
-text = "{track_info}"
-alt = "{state}"
-tooltip = "{artist} - {title}\nVolume: {volume}%"
-class = "{state}"
-percentage = "{volume}"
+text = "{{track_info}}"
+alt = "{{state}}"
+tooltip = "{{artist}} - {{title}}\nVolume: {{volume}}%"
+class = "{{state}}"
+percentage = "{{volume}}"
 ```
 
 #### Quality-Focused Display
 ```toml
 [output.json]
-text = "{artist} - {title} {quality_info}"
-alt = "{state}"
-tooltip = "{full_info}"
-class = "music-{state}"
-percentage = "{volume}"
+text = "{{artist}} - {{title}} {{quality_info}}"
+alt = "{{state}}"
+tooltip = "{{full_info}}"
+class = "music-{{state}}"
+percentage = "{{volume}}"
 ```
 
 #### Compact Display
 ```toml
 [output.json]
-text = "{track_info}"
-alt = "{volume}%"
-tooltip = "{full_info}"
-class = "{state}"
-percentage = "{volume}"
+text = "{{track_info}}"
+alt = "{{volume}}%"
+tooltip = "{{full_info}}"
+class = "{{state}}"
+percentage = "{{volume}}"
 ```
 
 ## Styling Options
@@ -356,11 +356,11 @@ device_ip = "192.168.1.102"
 format = "json"
 
 [output.json]
-text = "{artist} - {title}"
-alt = "{state}"
-tooltip = "{full_info}"
-class = "{state}"
-percentage = "{volume}"
+text = "{{artist}} - {{title}}"
+alt = "{{state}}"
+tooltip = "{{full_info}}"
+class = "{{state}}"
+percentage = "{{volume}}"
 ```
 
 ### Multiple Waybar Modules
@@ -409,7 +409,7 @@ percentage = "{volume}"
 ```bash
 # Script to update only when playing
 #!/bin/bash
-STATE=$(wiim-control status --profile custom --template "{state}")
+STATE=$(wiim-control status --profile custom --template "{{state}}")
 if [[ "$STATE" == "playing" ]]; then
     wiim-control --profile waybar status
 else
@@ -464,11 +464,11 @@ device_ip = "192.168.1.100"
 format = "json"
 
 [output.json]
-text = "{artist} - {title}"
-alt = "{state}"
-tooltip = "{full_info}"
-class = "{state}"
-percentage = "{volume}"
+text = "{{artist}} - {{title}}"
+alt = "{{state}}"
+tooltip = "{{full_info}}"
+class = "{{state}}"
+percentage = "{{volume}}"
 ```
 
 **`~/.config/waybar/config`**:

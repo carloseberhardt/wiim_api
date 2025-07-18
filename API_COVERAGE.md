@@ -2,9 +2,9 @@
 
 This document tracks implementation status of WiiM HTTP API endpoints.
 
-## Implementation Status: 56% (13/23 endpoints)
+## Implementation Status: 52% (11/21 endpoints)
 
-### ✅ Implemented (13 endpoints)
+### ✅ Implemented (11 endpoints)
 
 **Playback Control:**
 - `getPlayerStatus` - Get current playback state
@@ -25,11 +25,11 @@ This document tracks implementation status of WiiM HTTP API endpoints.
 **Device Information:**
 - `getStatusEx` - Get comprehensive device and network status
 
-**Library Methods:**
+**Library Methods (not counted in API coverage):**
 - `get_now_playing()` - Combined status + metadata
 - `volume_up()/volume_down()` - Relative volume control
 
-### ❌ Not Implemented
+### ❌ Not Implemented (10 endpoints)
 
 #### High Priority (7 endpoints)
 Essential features missing from current implementation:
@@ -42,24 +42,23 @@ Essential features missing from current implementation:
 - `MCUKeyShortClick:%d` - **Play presets** - No quick access to saved stations
 - `getPresetInfo` - **Get preset list** - Cannot see configured presets
 
-#### Medium Priority (7 endpoints)
+#### Medium Priority (3 endpoints)
 Useful enhancements:
 
-- `EQOn/EQOff/EQLoad` - Equalizer controls
-- `EQGetList/EQGetStat` - EQ preset management
 - `getNewAudioOutputHardwareMode` - Audio output status
 - `setAudioOutputHardwareMode` - Configure hardware outputs
 - `wlanGetConnectState` - Network status
+
+#### Additional Features (not counted in core API)
+These represent extended functionality beyond the core HTTP API:
+
+- `EQOn/EQOff/EQLoad` - Equalizer controls (multiple endpoints)
+- `EQGetList/EQGetStat` - EQ preset management (multiple endpoints)
 - `reboot` - Device restart
 - `setShutdown:sec` - Shutdown timer
-
-#### Low Priority (6 endpoints)
-Advanced/specialized features:
-
-- `setAlarmClock/getAlarmClock` - Alarm/timer functions
+- `setAlarmClock/getAlarmClock` - Alarm/timer functions (multiple endpoints)
 - `timeSync` - Manual time sync
 - `getShutdown` - Shutdown timer status
-- Various alarm management endpoints
 
 ## Key Limitations
 

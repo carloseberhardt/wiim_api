@@ -35,7 +35,7 @@ device_ip = "192.168.1.100"
 
 [profiles.i3blocks]
 format = "text"
-text_template = "{track_info} | {volume}%"
+text_template = "{{track_info}} | {{volume}}%"
 ```
 
 ### 4. Add to i3 Configuration
@@ -60,21 +60,21 @@ bar {
 ```toml
 [profiles.i3blocks-minimal]
 format = "text"
-text_template = "{track_info}"
+text_template = "{{track_info}}"
 ```
 
 #### Detailed Display
 ```toml
 [profiles.i3blocks-detailed]
 format = "text"
-text_template = "♪ {artist} - {title} • {quality_info} • {volume}%"
+text_template = "♪ {{artist}} - {{title}} • {{quality_info}} • {{volume}}%"
 ```
 
 #### Quality-Focused
 ```toml
 [profiles.i3blocks-quality]
 format = "text"
-text_template = "{track_info} | {quality_info}"
+text_template = "{{track_info}} | {{quality_info}}"
 ```
 
 ### Advanced i3blocks Block
@@ -119,7 +119,7 @@ Create `~/.config/i3blocks/scripts/wiim-music.sh`:
 
 # Get current status and state
 OUTPUT=$(wiim-control --profile i3blocks status)
-STATE=$(wiim-control status --profile custom --template "{state}")
+STATE=$(wiim-control status --profile custom --template "{{state}}")
 
 # Set colors based on state
 case "$STATE" in
@@ -228,7 +228,7 @@ align=center
 
 # Get current status
 OUTPUT=$(wiim-control --profile i3blocks status)
-STATE=$(wiim-control status --profile custom --template "{state}")
+STATE=$(wiim-control status --profile custom --template "{{state}}")
 
 # Output for i3blocks
 echo "$OUTPUT"
@@ -260,7 +260,7 @@ Create `~/.config/i3blocks/scripts/wiim-update.sh`:
 
 # Monitor for changes and update block
 while true; do
-    CURRENT_TRACK=$(wiim-control status --profile custom --template "{track_info}")
+    CURRENT_TRACK=$(wiim-control status --profile custom --template "{{track_info}}")
     if [ "$CURRENT_TRACK" != "$LAST_TRACK" ]; then
         pkill -RTMIN+10 i3blocks
         LAST_TRACK="$CURRENT_TRACK"
@@ -303,17 +303,17 @@ device_ip = "192.168.1.100"
 
 [profiles.i3blocks]
 format = "text"
-text_template = "{track_info} | {volume}%"
+text_template = "{{track_info}} | {{volume}}%"
 
 [profiles.i3blocks-kitchen]
 device_ip = "192.168.1.101"
 format = "text"
-text_template = "{track_info}"
+text_template = "{{track_info}}"
 
 [profiles.i3blocks-bedroom]
 device_ip = "192.168.1.102"
 format = "text"
-text_template = "{track_info} | {volume}%"
+text_template = "{{track_info}} | {{volume}}%"
 ```
 
 ## Theme Integration
@@ -379,7 +379,7 @@ signal=10
 
 # Get current status
 OUTPUT=$(wiim-control --profile i3blocks status)
-STATE=$(wiim-control status --profile custom --template "{state}")
+STATE=$(wiim-control status --profile custom --template "{{state}}")
 
 # Handle clicks with notifications
 case $BLOCK_BUTTON in
@@ -388,18 +388,18 @@ case $BLOCK_BUTTON in
         if [ "$STATE" = "playing" ]; then
             notify-send "WiiM" "Paused" -i audio-volume-muted
         else
-            TRACK=$(wiim-control status --profile custom --template "{track_info}")
+            TRACK=$(wiim-control status --profile custom --template "{{track_info}}")
             notify-send "WiiM" "Playing: $TRACK" -i audio-volume-high
         fi
         ;;
     2) # Middle click - previous
         wiim-control prev
-        TRACK=$(wiim-control status --profile custom --template "{track_info}")
+        TRACK=$(wiim-control status --profile custom --template "{{track_info}}")
         notify-send "WiiM" "Previous: $TRACK" -i media-skip-backward
         ;;
     3) # Right click - next
         wiim-control next
-        TRACK=$(wiim-control status --profile custom --template "{track_info}")
+        TRACK=$(wiim-control status --profile custom --template "{{track_info}}")
         notify-send "WiiM" "Next: $TRACK" -i media-skip-forward
         ;;
     4) # Scroll up - volume up
@@ -443,9 +443,9 @@ pkill -RTMIN+10 i3blocks
 # ~/.config/i3blocks/scripts/wiim-progress.sh
 
 # Get track information
-POSITION_MS=$(wiim-control status --profile custom --template "{position_ms}")
-DURATION_MS=$(wiim-control status --profile custom --template "{duration_ms}")
-TRACK_INFO=$(wiim-control status --profile custom --template "{track_info}")
+POSITION_MS=$(wiim-control status --profile custom --template "{{position_ms}}")
+DURATION_MS=$(wiim-control status --profile custom --template "{{duration_ms}}")
+TRACK_INFO=$(wiim-control status --profile custom --template "{{track_info}}")
 
 # Calculate progress
 if [ "$DURATION_MS" -gt 0 ]; then
@@ -484,7 +484,7 @@ signal=10
 
 # Cache file for last known state
 CACHE_FILE="/tmp/wiim-i3blocks-cache"
-CURRENT_STATE=$(wiim-control status --profile custom --template "{state}")
+CURRENT_STATE=$(wiim-control status --profile custom --template "{{state}}")
 
 # Only update if state changed or if playing
 if [ ! -f "$CACHE_FILE" ] || [ "$(cat $CACHE_FILE)" != "$CURRENT_STATE" ] || [ "$CURRENT_STATE" = "playing" ]; then
@@ -546,7 +546,7 @@ device_ip = "192.168.1.100"
 
 [profiles.i3blocks]
 format = "text"
-text_template = "♪ {artist} - {title} • {volume}%"
+text_template = "♪ {{artist}} - {{title}} • {{volume}}%"
 ```
 
 **`~/.config/i3blocks/config`**:
@@ -571,7 +571,7 @@ signal=10
 
 # Get current status and state
 OUTPUT=$(wiim-control --profile i3blocks status)
-STATE=$(wiim-control status --profile custom --template "{state}")
+STATE=$(wiim-control status --profile custom --template "{{state}}")
 
 # Handle clicks
 case $BLOCK_BUTTON in
