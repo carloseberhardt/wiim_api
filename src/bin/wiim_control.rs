@@ -2,7 +2,7 @@ use clap::{Parser, Subcommand};
 use serde::Serialize;
 use std::path::PathBuf;
 use tokio::fs;
-use wiim_api::{WiimClient, Result as WiimResult, PlayState};
+use wiim_api::{PlayState, Result as WiimResult, WiimClient};
 
 #[derive(Parser)]
 #[command(author, version, about, long_about = None)]
@@ -12,15 +12,15 @@ struct Cli {
     /// WiiM device IP address (overrides config file)
     #[arg(short, long)]
     device: Option<String>,
-    
+
     /// Output format for status command
     #[arg(short, long, default_value = "text")]
     format: OutputFormat,
-    
+
     /// Config file path (default: ~/.config/wiim-control/config.toml)
     #[arg(short, long)]
     config: Option<PathBuf>,
-    
+
     #[command(subcommand)]
     command: Commands,
 }
@@ -50,14 +50,14 @@ enum Commands {
     /// Set volume (0-100)
     Volume { level: u8 },
     /// Increase volume by step (default 5)
-    VolumeUp { 
+    VolumeUp {
         #[arg(default_value = "5")]
-        step: u8 
+        step: u8,
     },
     /// Decrease volume by step (default 5)
-    VolumeDown { 
+    VolumeDown {
         #[arg(default_value = "5")]
-        step: u8 
+        step: u8,
     },
     /// Mute audio
     Mute,
@@ -90,16 +90,16 @@ impl Default for Config {
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let cli = Cli::parse();
-    
+
     // Load configuration
     let config = load_config(&cli.config).await?;
-    
+
     // Get device IP from CLI arg or config
     let device_ip = cli.device.as_ref().unwrap_or(&config.device_ip);
-    
+
     // Create client
     let client = WiimClient::new(device_ip);
-    
+
     // Execute command
     match cli.command {
         Commands::Status => {
@@ -150,13 +150,13 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             println!("🔊 Unmuted");
         }
     }
-    
+
     Ok(())
 }
 
 async fn handle_status(client: &WiimClient, format: &OutputFormat) -> WiimResult<()> {
     let now_playing = client.get_now_playing().await?;
-    
+
     match format {
         OutputFormat::Text => {
             let status_icon = match now_playing.state {
@@ -165,7 +165,7 @@ async fn handle_status(client: &WiimClient, format: &OutputFormat) -> WiimResult
                 PlayState::Stopped => "⏹️",
                 PlayState::Loading => "⏳",
             };
-            
+
             let track_info = format_track_info(&now_playing);
             println!("{} {}", status_icon, track_info);
         }
@@ -176,10 +176,10 @@ async fn handle_status(client: &WiimClient, format: &OutputFormat) -> WiimResult
                 PlayState::Stopped => "stopped",
                 PlayState::Loading => "loading",
             };
-            
+
             let track_info = format_track_info(&now_playing);
             let tooltip = format_tooltip(&now_playing);
-            
+
             let output = StatusOutput {
                 text: track_info.clone(),
                 alt: format!("{:?}", now_playing.state).to_lowercase(),
@@ -187,11 +187,11 @@ async fn handle_status(client: &WiimClient, format: &OutputFormat) -> WiimResult
                 class: status_class.to_string(),
                 percentage: Some(now_playing.volume),
             };
-            
+
             println!("{}", serde_json::to_string(&output)?);
         }
     }
-    
+
     Ok(())
 }
 
@@ -212,7 +212,7 @@ fn format_track_info(now_playing: &wiim_api::NowPlaying) -> String {
 
 fn format_tooltip(now_playing: &wiim_api::NowPlaying) -> String {
     let mut parts = Vec::new();
-    
+
     if let Some(title) = &now_playing.title {
         parts.push(format!("Title: {}", title));
     }
@@ -222,27 +222,31 @@ fn format_tooltip(now_playing: &wiim_api::NowPlaying) -> String {
     if let Some(album) = &now_playing.album {
         parts.push(format!("Album: {}", album));
     }
-    
+
     parts.push(format!("Volume: {}%", now_playing.volume));
-    
+
     if now_playing.is_muted {
         parts.push("🔇 Muted".to_string());
     }
-    
-    if let (Some(sample_rate), Some(bit_depth)) = (&now_playing.sample_rate, &now_playing.bit_depth) {
+
+    if let (Some(sample_rate), Some(bit_depth)) = (&now_playing.sample_rate, &now_playing.bit_depth)
+    {
         parts.push(format!("Quality: {}kHz/{}bit", sample_rate, bit_depth));
     }
-    
+
     // Format position/duration
     if now_playing.duration_ms > 0 {
         let pos_min = now_playing.position_ms / 60000;
         let pos_sec = (now_playing.position_ms % 60000) / 1000;
         let dur_min = now_playing.duration_ms / 60000;
         let dur_sec = (now_playing.duration_ms % 60000) / 1000;
-        
-        parts.push(format!("Time: {}:{:02} / {}:{:02}", pos_min, pos_sec, dur_min, dur_sec));
+
+        parts.push(format!(
+            "Time: {}:{:02} / {}:{:02}",
+            pos_min, pos_sec, dur_min, dur_sec
+        ));
     }
-    
+
     parts.join("\n")
 }
 
@@ -253,11 +257,11 @@ async fn load_config(config_path: &Option<PathBuf>) -> Result<Config, Box<dyn st
             let config_dir = dirs::config_dir()
                 .ok_or("Could not find config directory")?
                 .join("wiim-control");
-            
+
             // Create config directory if it doesn't exist
             if !config_dir.exists() {
                 fs::create_dir_all(&config_dir).await?;
-                
+
                 // Create default config file
                 let default_config = Config::default();
                 let config_content = format!("device_ip = \"{}\"\n", default_config.device_ip);
@@ -266,11 +270,11 @@ async fn load_config(config_path: &Option<PathBuf>) -> Result<Config, Box<dyn st
                 println!("Created default config at: {}", config_file.display());
                 return Ok(default_config);
             }
-            
+
             config_dir.join("config.toml")
         }
     };
-    
+
     // Try to read config file
     if config_file.exists() {
         let content = fs::read_to_string(&config_file).await?;
