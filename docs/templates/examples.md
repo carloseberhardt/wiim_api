@@ -12,18 +12,18 @@ device_ip = "192.168.1.100"
 
 # Default text output templates
 [output.text]
-playing = "▶️ {artist} - {title} {quality_info}"
-paused = "⏸️ {artist} - {title}"
+playing = "▶️ {{artist}} - {{title}} {{quality_info}}"
+paused = "⏸️ {{artist}} - {{title}}"
 stopped = "⏹️ No music"
 loading = "⏳ Loading..."
 
 # Default JSON output templates
 [output.json]
-text = "{artist} - {title}"
-alt = "{state}"
-tooltip = "{full_info}"
-class = "{state}"
-percentage = "{volume}"
+text = "{{artist}} - {{title}}"
+alt = "{{state}}"
+tooltip = "{{full_info}}"
+class = "{{state}}"
+percentage = "{{volume}}"
 
 # Status bar profiles
 [profiles.waybar]
@@ -32,19 +32,19 @@ format = "json"
 
 [profiles.polybar]
 format = "text"
-text_template = "{artist} - {title} [{quality_info}]"
+text_template = "{{artist}} - {{title}} [{{quality_info}}]"
 
 [profiles.i3blocks]
 format = "text"
-text_template = "{track_info} | {volume}%"
+text_template = "{{track_info}} | {{volume}}%"
 
 [profiles.minimal]
 format = "text"
-text_template = "{track_info}"
+text_template = "{{track_info}}"
 
 [profiles.audiophile]
 format = "text"
-text_template = "♪ {artist} - {title} • {quality_info} • {volume}%"
+text_template = "♪ {{artist}} - {{title}} • {{quality_info}} • {{volume}}%"
 ```
 
 ## Text Format Examples
@@ -54,26 +54,26 @@ text_template = "♪ {artist} - {title} • {quality_info} • {volume}%"
 ```toml
 [output.text]
 # Simple with icons
-playing = "▶️ {track_info}"
-paused = "⏸️ {track_info}"
+playing = "▶️ {{track_info}}"
+paused = "⏸️ {{track_info}}"
 stopped = "⏹️ No music"
 loading = "⏳ Loading..."
 
 # With quality information
-playing = "▶️ {artist} - {title} {quality_info}"
-paused = "⏸️ {artist} - {title}"
+playing = "▶️ {{artist}} - {{title}} {{quality_info}}"
+paused = "⏸️ {{artist}} - {{title}}"
 stopped = "⏹️ No music"
 loading = "⏳ Loading..."
 
 # Volume included
-playing = "▶️ {artist} - {title} | {volume}%"
-paused = "⏸️ {artist} - {title} | {volume}%"
-stopped = "⏹️ No music | {volume}%"
-loading = "⏳ Loading... | {volume}%"
+playing = "▶️ {{artist}} - {{title}} | {{volume}}%"
+paused = "⏸️ {{artist}} - {{title}} | {{volume}}%"
+stopped = "⏹️ No music | {{volume}}%"
+loading = "⏳ Loading... | {{volume}}%"
 
 # Minimal format
-playing = "{artist} - {title}"
-paused = "{artist} - {title} [PAUSED]"
+playing = "{{artist}} - {{title}}"
+paused = "{{artist}} - {{title}} [PAUSED]"
 stopped = "No music"
 loading = "Loading..."
 ```
@@ -83,20 +83,20 @@ loading = "Loading..."
 ```toml
 [output.text]
 # Audiophile format with detailed quality
-playing = "♪ {artist} - {title} • {sample_rate_khz}/{bit_depth_bit} • Vol: {volume}%"
-paused = "⏸ {artist} - {title} • {sample_rate_khz}/{bit_depth_bit} • Vol: {volume}%"
-stopped = "⏹ Stopped • Vol: {volume}%"
+playing = "♪ {{artist}} - {{title}} • {{sample_rate_khz}}/{{bit_depth_bit}} • Vol: {{volume}}%"
+paused = "⏸ {{artist}} - {{title}} • {{sample_rate_khz}}/{{bit_depth_bit}} • Vol: {{volume}}%"
+stopped = "⏹ Stopped • Vol: {{volume}}%"
 loading = "⏳ Loading..."
 
 # Compact format
-playing = "{artist} - {title} ({quality_info})"
-paused = "{artist} - {title} [⏸]"
+playing = "{{artist}} - {{title}} ({{quality_info}})"
+paused = "{{artist}} - {{title}} [⏸]"
 stopped = "[⏹]"
 loading = "[⏳]"
 
 # Position information
-playing = "▶️ {artist} - {title} • {position}/{duration}"
-paused = "⏸️ {artist} - {title} • {position}/{duration}"
+playing = "▶️ {{artist}} - {{title}} • {{position}}/{{duration}}"
+paused = "⏸️ {{artist}} - {{title}} • {{position}}/{{duration}}"
 stopped = "⏹️ No music"
 loading = "⏳ Loading..."
 ```
@@ -108,25 +108,25 @@ loading = "⏳ Loading..."
 ```toml
 [output.json]
 # Standard format
-text = "{artist} - {title}"
-alt = "{state}"
-tooltip = "{full_info}"
-class = "{state}"
-percentage = "{volume}"
+text = "{{artist}} - {{title}}"
+alt = "{{state}}"
+tooltip = "{{full_info}}"
+class = "{{state}}"
+percentage = "{{volume}}"
 
 # Track info focus
-text = "{track_info}"
-alt = "{state}"
-tooltip = "{artist} - {title}\nAlbum: {album}\nVolume: {volume}%"
-class = "{state}"
-percentage = "{volume}"
+text = "{{track_info}}"
+alt = "{{state}}"
+tooltip = "{{artist}} - {{title}}\nAlbum: {{album}}\nVolume: {{volume}}%"
+class = "{{state}}"
+percentage = "{{volume}}"
 
 # Quality focus
-text = "{artist} - {title} {quality_info}"
-alt = "{state}"
-tooltip = "{full_info}"
-class = "music-{state}"
-percentage = "{volume}"
+text = "{{artist}} - {{title}} {{quality_info}}"
+alt = "{{state}}"
+tooltip = "{{full_info}}"
+class = "music-{{state}}"
+percentage = "{{volume}}"
 ```
 
 ### Advanced JSON Templates
@@ -134,25 +134,25 @@ percentage = "{volume}"
 ```toml
 [output.json]
 # Audiophile format
-text = "{artist} - {title}"
-alt = "{quality_info}"
-tooltip = "{title}\nArtist: {artist}\nAlbum: {album}\nQuality: {quality_info}\nVolume: {volume}%\nPosition: {position}/{duration}"
-class = "music-{state}"
-percentage = "{volume}"
+text = "{{artist}} - {{title}}"
+alt = "{{quality_info}}"
+tooltip = "{{title}}\nArtist: {{artist}}\nAlbum: {{album}}\nQuality: {{quality_info}}\nVolume: {{volume}}%\nPosition: {{position}}/{{duration}}"
+class = "music-{{state}}"
+percentage = "{{volume}}"
 
 # Compact format
-text = "{track_info}"
-alt = "{volume}%"
-tooltip = "{full_info}"
-class = "{state}"
-percentage = "{volume}"
+text = "{{track_info}}"
+alt = "{{volume}}%"
+tooltip = "{{full_info}}"
+class = "{{state}}"
+percentage = "{{volume}}"
 
 # Position-aware format
-text = "{artist} - {title} ({position})"
-alt = "{state}"
-tooltip = "{full_info}"
-class = "music-{state}"
-percentage = "{volume}"
+text = "{{artist}} - {{title}} ({{position}})"
+alt = "{{state}}"
+tooltip = "{{full_info}}"
+class = "music-{{state}}"
+percentage = "{{volume}}"
 ```
 
 ## Profile-Based Examples
@@ -170,11 +170,11 @@ format = "json"
 json_template = "custom"
 
 [output.json]
-text = "{track_info}"
-alt = "{state}"
-tooltip = "{full_info}"
-class = "music-{state}"
-percentage = "{volume}"
+text = "{{track_info}}"
+alt = "{{state}}"
+tooltip = "{{full_info}}"
+class = "music-{{state}}"
+percentage = "{{volume}}"
 ```
 
 ### Polybar Profile
@@ -182,20 +182,20 @@ percentage = "{volume}"
 ```toml
 [profiles.polybar]
 format = "text"
-text_template = "{artist} - {title} [{quality_info}]"
+text_template = "{{artist}} - {{title}} [{{quality_info}}]"
 
 # Alternative polybar formats
 [profiles.polybar-minimal]
 format = "text"
-text_template = "{track_info}"
+text_template = "{{track_info}}"
 
 [profiles.polybar-detailed]
 format = "text"
-text_template = "♪ {artist} - {title} • {quality_info} • {volume}%"
+text_template = "♪ {{artist}} - {{title}} • {{quality_info}} • {{volume}}%"
 
 [profiles.polybar-compact]
 format = "text"
-text_template = "{artist} - {title} ({position})"
+text_template = "{{artist}} - {{title}} ({{position}})"
 ```
 
 ### i3blocks Profile
@@ -203,16 +203,16 @@ text_template = "{artist} - {title} ({position})"
 ```toml
 [profiles.i3blocks]
 format = "text"
-text_template = "{track_info} | {volume}%"
+text_template = "{{track_info}} | {{volume}}%"
 
 # Alternative i3blocks formats
 [profiles.i3blocks-quality]
 format = "text"
-text_template = "{track_info} | {quality_info}"
+text_template = "{{track_info}} | {{quality_info}}"
 
 [profiles.i3blocks-detailed]
 format = "text"
-text_template = "♪ {artist} - {title} • {volume}% • {quality_info}"
+text_template = "♪ {{artist}} - {{title}} • {{volume}}% • {{quality_info}}"
 ```
 
 ## Specialized Use Cases
@@ -222,11 +222,11 @@ text_template = "♪ {artist} - {title} • {volume}% • {quality_info}"
 ```toml
 [profiles.notify]
 format = "text"
-text_template = "♪ Now Playing: {artist} - {title}"
+text_template = "♪ Now Playing: {{artist}} - {{title}}"
 
 [profiles.notify-detailed]
 format = "text"
-text_template = "♪ {artist} - {title}\n🎵 Album: {album}\n🔊 Volume: {volume}%\n📊 Quality: {quality_info}"
+text_template = "♪ {{artist}} - {{title}}\n🎵 Album: {{album}}\n🔊 Volume: {{volume}}%\n📊 Quality: {{quality_info}}"
 ```
 
 ### Terminal Display
@@ -234,15 +234,15 @@ text_template = "♪ {artist} - {title}\n🎵 Album: {album}\n🔊 Volume: {volu
 ```toml
 [profiles.terminal]
 format = "text"
-text_template = "🎵 {artist} - {title} | 🔊 {volume}% | 📊 {quality_info}"
+text_template = "🎵 {{artist}} - {{title}} | 🔊 {{volume}}% | 📊 {{quality_info}}"
 
 [profiles.terminal-simple]
 format = "text"
-text_template = "{track_info} ({volume}%)"
+text_template = "{{track_info}} ({{volume}}%)"
 
 [profiles.terminal-verbose]
 format = "text"
-text_template = "🎵 Now Playing: {artist} - {title}\n📀 Album: {album}\n🔊 Volume: {volume}% {muted}\n📊 Quality: {quality_info}\n⏱️ Time: {position}/{duration}"
+text_template = "🎵 Now Playing: {{artist}} - {{title}}\n📀 Album: {{album}}\n🔊 Volume: {{volume}}% {{muted}}\n📊 Quality: {{quality_info}}\n⏱️ Time: {{position}}/{{duration}}"
 ```
 
 ### Automation Scripts
@@ -250,19 +250,19 @@ text_template = "🎵 Now Playing: {artist} - {title}\n📀 Album: {album}\n🔊
 ```toml
 [profiles.script-artist]
 format = "text"
-text_template = "{artist}"
+text_template = "{{artist}}"
 
 [profiles.script-title]
 format = "text"
-text_template = "{title}"
+text_template = "{{title}}"
 
 [profiles.script-quality]
 format = "text"
-text_template = "{quality_info}"
+text_template = "{{quality_info}}"
 
 [profiles.script-status]
 format = "text"
-text_template = "{state}"
+text_template = "{{state}}"
 ```
 
 ## Theme-Based Examples
@@ -272,17 +272,17 @@ text_template = "{state}"
 ```toml
 [profiles.minimal]
 format = "text"
-text_template = "{track_info}"
+text_template = "{{track_info}}"
 
 [profiles.minimal-json]
 format = "json"
 
 [output.json]
-text = "{track_info}"
+text = "{{track_info}}"
 alt = ""
-tooltip = "{artist} - {title}"
+tooltip = "{{artist}} - {{title}}"
 class = ""
-percentage = "{volume}"
+percentage = "{{volume}}"
 ```
 
 ### Detailed Theme
@@ -290,27 +290,27 @@ percentage = "{volume}"
 ```toml
 [profiles.detailed]
 format = "text"
-text_template = "🎵 {artist} - {title} | 📊 {quality_info} | 🔊 {volume}% | ⏱️ {position}/{duration}"
+text_template = "🎵 {{artist}} - {{title}} | 📊 {{quality_info}} | 🔊 {{volume}}% | ⏱️ {{position}}/{{duration}}"
 
 [profiles.detailed-json]
 format = "json"
 
 [output.json]
-text = "{artist} - {title} [{quality_info}]"
-alt = "{state} • {volume}%"
-tooltip = "{full_info}"
-class = "music-{state}"
-percentage = "{volume}"
+text = "{{artist}} - {{title}} [{{quality_info}}]"
+alt = "{{state}} • {{volume}}%"
+tooltip = "{{full_info}}"
+class = "music-{{state}}"
+percentage = "{{volume}}"
 ```
 
 ### Icon-Heavy Theme
 
 ```toml
 [output.text]
-playing = "▶️ {artist} - {title} 🎵 {quality_info} 🔊 {volume}%"
-paused = "⏸️ {artist} - {title} 🎵 {quality_info} 🔊 {volume}%"
-stopped = "⏹️ No music 🔊 {volume}%"
-loading = "⏳ Loading... 🔊 {volume}%"
+playing = "▶️ {{artist}} - {{title}} 🎵 {{quality_info}} 🔊 {{volume}}%"
+paused = "⏸️ {{artist}} - {{title}} 🎵 {{quality_info}} 🔊 {{volume}}%"
+stopped = "⏹️ No music 🔊 {{volume}}%"
+loading = "⏳ Loading... 🔊 {{volume}}%"
 
 [profiles.icons]
 format = "text"
@@ -327,12 +327,12 @@ device_ip = "192.168.1.100"
 [profiles.kitchen]
 device_ip = "192.168.1.101"
 format = "text"
-text_template = "🍳 {track_info}"
+text_template = "🍳 {{track_info}}"
 
 [profiles.bedroom]
 device_ip = "192.168.1.102"
 format = "text"
-text_template = "🛏️ {track_info} | {volume}%"
+text_template = "🛏️ {{track_info}} | {{volume}}%"
 
 [profiles.office]
 device_ip = "192.168.1.103"
@@ -347,18 +347,18 @@ format = "json"
 ```toml
 [output.text]
 # These templates work even when some data is missing
-playing = "{artist} - {title} {quality_info}"  # Shows partial info if available
-paused = "{track_info}"                        # Falls back to smart combination
+playing = "{{artist}} - {{title}} {{quality_info}}"  # Shows partial info if available
+paused = "{{track_info}}"                        # Falls back to smart combination
 stopped = "No music"                           # Static text when nothing is playing
 loading = "Loading..."                         # Static text during loading
 
 [output.json]
 # JSON templates with fallbacks
-text = "{track_info}"                          # Smart fallback for missing artist/title
-alt = "{state}"                                # Always available
-tooltip = "{full_info}"                        # Pre-formatted with all available info
-class = "{state}"                              # Always available
-percentage = "{volume}"                        # Always available
+text = "{{track_info}}"                          # Smart fallback for missing artist/title
+alt = "{{state}}"                                # Always available
+tooltip = "{{full_info}}"                        # Pre-formatted with all available info
+class = "{{state}}"                              # Always available
+percentage = "{{volume}}"                        # Always available
 ```
 
 ### Data Validation
@@ -367,16 +367,16 @@ percentage = "{volume}"                        # Always available
 [profiles.safe]
 format = "text"
 # This template is designed to always produce valid output
-text_template = "{track_info}"
+text_template = "{{track_info}}"
 
 [profiles.safe-json]
 format = "json"
 # These templates ensure valid JSON output
-text = "{track_info}"
-alt = "{state}"
-tooltip = "{title} - {artist}"
+text = "{{track_info}}"
+alt = "{{state}}"
+tooltip = "{{title}} - {{artist}}"
 class = "music"
-percentage = "{volume}"
+percentage = "{{volume}}"
 ```
 
 ## Performance Optimized Examples
@@ -387,15 +387,15 @@ percentage = "{volume}"
 # Fast templates using pre-computed combinations
 [profiles.fast]
 format = "text"
-text_template = "{track_info}"  # Pre-computed, no template processing needed
+text_template = "{{track_info}}"  # Pre-computed, no template processing needed
 
 [profiles.fast-json]
 format = "json"
-text = "{track_info}"           # Pre-computed
-alt = "{state}"                 # Simple variable
-tooltip = "{full_info}"         # Pre-computed
-class = "{state}"               # Simple variable
-percentage = "{volume}"         # Simple variable
+text = "{{track_info}}"           # Pre-computed
+alt = "{{state}}"                 # Simple variable
+tooltip = "{{full_info}}"         # Pre-computed
+class = "{{state}}"               # Simple variable
+percentage = "{{volume}}"         # Simple variable
 ```
 
 ### Minimal Processing
@@ -404,15 +404,15 @@ percentage = "{volume}"         # Simple variable
 # Templates that require minimal processing
 [profiles.minimal-processing]
 format = "text"
-text_template = "{artist} - {title}"
+text_template = "{{artist}} - {{title}}"
 
 [profiles.minimal-json]
 format = "json"
-text = "{artist} - {title}"
-alt = "{state}"
-tooltip = "{artist} - {title}"
-class = "{state}"
-percentage = "{volume}"
+text = "{{artist}} - {{title}}"
+alt = "{{state}}"
+tooltip = "{{artist}} - {{title}}"
+class = "{{state}}"
+percentage = "{{volume}}"
 ```
 
 ## Testing Examples
@@ -422,15 +422,15 @@ percentage = "{volume}"
 ```toml
 [profiles.debug]
 format = "text"
-text_template = "A:{artist} T:{title} Q:{quality_info} V:{volume} S:{state}"
+text_template = "A:{{artist}} T:{{title}} Q:{{quality_info}} V:{{volume}} S:{{state}}"
 
 [profiles.debug-json]
 format = "json"
-text = "Debug: {artist} - {title}"
-alt = "State: {state}, Vol: {volume}"
-tooltip = "{full_info}"
-class = "debug-{state}"
-percentage = "{volume}"
+text = "Debug: {{artist}} - {{title}}"
+alt = "State: {{state}}, Vol: {{volume}}"
+tooltip = "{{full_info}}"
+class = "debug-{{state}}"
+percentage = "{{volume}}"
 ```
 
 ### Variable Testing
@@ -438,15 +438,15 @@ percentage = "{volume}"
 ```toml
 [profiles.test-all]
 format = "text"
-text_template = "Artist:{artist}|Title:{title}|Album:{album}|State:{state}|Vol:{volume}|Quality:{quality_info}"
+text_template = "Artist:{{artist}}|Title:{{title}}|Album:{{album}}|State:{{state}}|Vol:{{volume}}|Quality:{{quality_info}}"
 
 [profiles.test-quality]
 format = "text"
-text_template = "SR:{sample_rate}|BD:{bit_depth}|SRK:{sample_rate_khz}|BDB:{bit_depth_bit}|QI:{quality_info}"
+text_template = "SR:{{sample_rate}}|BD:{{bit_depth}}|SRK:{{sample_rate_khz}}|BDB:{{bit_depth_bit}}|QI:{{quality_info}}"
 
 [profiles.test-timing]
 format = "text"
-text_template = "Pos:{position}|Dur:{duration}|PosMS:{position_ms}|DurMS:{duration_ms}"
+text_template = "Pos:{{position}}|Dur:{{duration}}|PosMS:{{position_ms}}|DurMS:{{duration_ms}}"
 ```
 
 ## Usage Examples
@@ -458,13 +458,13 @@ text_template = "Pos:{position}|Dur:{duration}|PosMS:{position_ms}|DurMS:{durati
 wiim-control status --profile waybar
 
 # Override template
-wiim-control status --profile polybar --template "{artist} - {title}"
+wiim-control status --profile polybar --template "{{artist}} - {{title}}"
 
 # Test configuration
 wiim-control status --profile debug
 
 # Quality information only
-wiim-control status --profile custom --template "{quality_info}"
+wiim-control status --profile custom --template "{{quality_info}}"
 ```
 
 ### Integration Examples

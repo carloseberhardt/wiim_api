@@ -312,9 +312,52 @@ impl From<&wiim_api::NowPlaying> for TemplateContext {
 
 fn validate_template(template: &str) -> Result<(), String> {
     let mut handlebars = Handlebars::new();
+
+    // Check for common syntax mistakes first
+    if template.contains('{') {
+        // Check if there are any single braces (not part of double braces)
+        let mut chars = template.chars().peekable();
+        let mut has_single_braces = false;
+
+        while let Some(ch) = chars.next() {
+            if ch == '{' {
+                // Check if this is a single brace or part of double braces
+                match chars.peek() {
+                    Some('{') => {
+                        // This is a double brace, consume the next '{'
+                        chars.next();
+                    }
+                    _ => {
+                        // This is a single brace
+                        has_single_braces = true;
+                        break;
+                    }
+                }
+            }
+        }
+
+        if has_single_braces {
+            return Err("Invalid template syntax: found single braces. \
+                 Template variables must use double braces like {{variable}}. \
+                 Example: '{{artist}} - {{title}}'"
+                .to_string());
+        }
+    }
+
     handlebars
         .register_template_string("validation", template)
-        .map_err(|e| e.to_string())?;
+        .map_err(|e| {
+            let error_msg = e.to_string();
+            if error_msg.contains("unclosed") || error_msg.contains("unexpected") {
+                format!(
+                    "Invalid template syntax: {error_msg}. \
+                     Make sure to use double braces like {{{{variable}}}}. \
+                     Example: '{{{{artist}}}} - {{{{title}}}}'"
+                )
+            } else {
+                format!("Invalid template syntax: {error_msg}")
+            }
+        })?;
     Ok(())
 }
 
@@ -782,6 +825,45 @@ mod tests {
         assert_eq!(templates.alt, "{{state}}");
         assert_eq!(templates.tooltip, "{{full_info}}");
         assert_eq!(templates.class, "{{state}}");
+    }
+
+    #[test]
+    fn test_validate_template_single_braces() {
+        let result = validate_template("{artist} - {title}");
+        assert!(result.is_err());
+        let error_msg = result.unwrap_err();
+        assert!(error_msg.contains("Invalid template syntax: found single braces"));
+        assert!(error_msg.contains("double braces like {{variable}}"));
+    }
+
+    #[test]
+    fn test_validate_template_double_braces() {
+        let result = validate_template("{{artist}} - {{title}}");
+        assert!(result.is_ok());
+    }
+
+    #[test]
+    fn test_validate_template_mixed_braces() {
+        let result = validate_template("{{artist}} - {title}");
+        assert!(result.is_err());
+        let error_msg = result.unwrap_err();
+        assert!(error_msg.contains("Invalid template syntax: found single braces"));
+    }
+
+    #[test]
+    fn test_validate_template_unclosed_braces() {
+        let result = validate_template("{{artist} - {{title}}");
+        assert!(result.is_err());
+        let error_msg = result.unwrap_err();
+        println!("Actual error message: {error_msg}");
+        // The unclosed brace should be caught by our single brace detection or handlebars
+        assert!(error_msg.contains("Invalid template syntax"));
+    }
+
+    #[test]
+    fn test_validate_template_no_braces() {
+        let result = validate_template("Now Playing");
+        assert!(result.is_ok());
     }
 
     #[test]
