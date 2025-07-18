@@ -21,3 +21,4 @@ thiserror = "1.0"
 clap = { version = "4.0", features = ["derive"] }
 dirs = "5.0"
 toml = "0.8"
+handlebars = "4.0"
