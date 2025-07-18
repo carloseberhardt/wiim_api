@@ -2,9 +2,9 @@
 
 This document tracks implementation status of WiiM HTTP API endpoints.
 
-## Implementation Status: 52% (12/23 endpoints)
+## Implementation Status: 56% (13/23 endpoints)
 
-### ✅ Implemented (12 endpoints)
+### ✅ Implemented (13 endpoints)
 
 **Playback Control:**
 - `getPlayerStatus` - Get current playback state
@@ -22,13 +22,16 @@ This document tracks implementation status of WiiM HTTP API endpoints.
 **Track Information:**
 - `getMetaInfo` - Get current track metadata
 
+**Device Information:**
+- `getStatusEx` - Get comprehensive device and network status
+
 **Library Methods:**
 - `get_now_playing()` - Combined status + metadata
 - `volume_up()/volume_down()` - Relative volume control
 
 ### ❌ Not Implemented
 
-#### High Priority (8 endpoints)
+#### High Priority (7 endpoints)
 Essential features missing from current implementation:
 
 - `setPlayerCmd:play:url` - **Play audio URL** - Cannot start playback
@@ -38,7 +41,6 @@ Essential features missing from current implementation:
 - `setPlayerCmd:switchmode:%s` - **Switch input source** - No BT/optical/aux switching
 - `MCUKeyShortClick:%d` - **Play presets** - No quick access to saved stations
 - `getPresetInfo` - **Get preset list** - Cannot see configured presets
-- `getStatusEx` - **Device information** - No device details/capabilities
 
 #### Medium Priority (7 endpoints)
 Useful enhancements:
