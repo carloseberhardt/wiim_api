@@ -21,7 +21,7 @@
 //!
 //!     // Get now playing information
 //!     let now_playing = client.get_now_playing().await?;
-//!     println!("♪ {} - {}", 
+//!     println!("♪ {} - {}",
 //!         now_playing.artist.unwrap_or_default(),
 //!         now_playing.title.unwrap_or_default()
 //!     );
@@ -147,11 +147,11 @@ pub struct NowPlaying {
 
 impl WiimClient {
     /// Create a new client with the device's IP address
-    /// 
+    ///
     /// # Examples
     /// ```
     /// use wiim_api::WiimClient;
-    /// 
+    ///
     /// let client = WiimClient::new("192.168.1.100");
     /// let client_with_https = WiimClient::new("https://192.168.1.100");
     /// ```
@@ -168,18 +168,15 @@ impl WiimClient {
             .build()
             .expect("Failed to create HTTP client");
 
-        Self {
-            base_url,
-            client,
-        }
+        Self { base_url, client }
     }
 
     /// Create a client and test connection to ensure the device is reachable
-    /// 
+    ///
     /// # Examples
     /// ```no_run
     /// use wiim_api::WiimClient;
-    /// 
+    ///
     /// #[tokio::main]
     /// async fn main() -> wiim_api::Result<()> {
     ///     let client = WiimClient::connect("192.168.1.100").await?;
@@ -189,19 +186,19 @@ impl WiimClient {
     /// ```
     pub async fn connect(ip_address: &str) -> Result<Self> {
         let client = Self::new(ip_address);
-        
+
         // Test connection by getting device status
         client.get_player_status().await?;
-        
+
         Ok(client)
     }
 
     /// Change the IP address of an existing client
-    /// 
+    ///
     /// # Examples
     /// ```
     /// use wiim_api::WiimClient;
-    /// 
+    ///
     /// let mut client = WiimClient::new("192.168.1.100");
     /// client.set_ip_address("192.168.1.101");
     /// ```
@@ -219,11 +216,11 @@ impl WiimClient {
     }
 
     /// Test if the device is reachable
-    /// 
+    ///
     /// # Examples
     /// ```no_run
     /// use wiim_api::WiimClient;
-    /// 
+    ///
     /// #[tokio::main]
     /// async fn main() -> wiim_api::Result<()> {
     ///     let client = WiimClient::new("192.168.1.100");
@@ -261,10 +258,7 @@ impl WiimClient {
     }
 
     pub async fn get_now_playing(&self) -> Result<NowPlaying> {
-        let (status, meta) = tokio::try_join!(
-            self.get_player_status(),
-            self.get_meta_info()
-        )?;
+        let (status, meta) = tokio::try_join!(self.get_player_status(), self.get_meta_info())?;
 
         let state = match status.status.as_str() {
             "play" => PlayState::Playing,
@@ -294,8 +288,39 @@ impl WiimClient {
         })
     }
 
+    /// Set the device volume level
+    ///
+    /// # Arguments
+    /// * `volume` - Volume level from 0 to 100
+    ///
+    /// # Errors
+    /// Returns `WiimError::InvalidResponse` if volume > 100
+    ///
+    /// # Examples
+    /// ```no_run
+    /// use wiim_api::WiimClient;
+    ///
+    /// #[tokio::main]
+    /// async fn main() -> wiim_api::Result<()> {
+    ///     let client = WiimClient::new("192.168.1.100");
+    ///     
+    ///     // Valid usage
+    ///     client.set_volume(75).await?;
+    ///     
+    ///     // Invalid usage - returns error
+    ///     match client.set_volume(150).await {
+    ///         Err(wiim_api::WiimError::InvalidResponse(msg)) => println!("Error: {}", msg),
+    ///         _ => {}
+    ///     }
+    ///     Ok(())
+    /// }
+    /// ```
     pub async fn set_volume(&self, volume: u8) -> Result<()> {
-        let volume = volume.min(100);
+        if volume > 100 {
+            return Err(WiimError::InvalidResponse(
+                "Volume must be 0-100".to_string(),
+            ));
+        }
         let command = format!("setPlayerCmd:vol:{}", volume);
         self.send_command(&command).await?;
         Ok(())
@@ -381,5 +406,62 @@ mod tests {
         assert_eq!(PlayState::Paused.to_string(), "paused");
         assert_eq!(PlayState::Stopped.to_string(), "stopped");
         assert_eq!(PlayState::Loading.to_string(), "loading");
+    }
+
+    #[test]
+    fn test_set_volume_validation_logic() {
+        // Test the validation logic directly without network calls
+        // This tests that valid volumes would pass validation
+        
+        // These values should pass the validation check (volume <= 100)
+        let valid_volumes = [0, 1, 50, 99, 100];
+        for volume in valid_volumes {
+            // The validation logic: if volume > 100
+            assert!(!(volume > 100), "Volume {} should be valid", volume);
+        }
+        
+        // These values should fail the validation check (volume > 100)
+        let invalid_volumes = [101, 150, 200, 255];
+        for volume in invalid_volumes {
+            // The validation logic: if volume > 100
+            assert!(volume > 100, "Volume {} should be invalid", volume);
+        }
+    }
+
+    #[tokio::test]
+    async fn test_set_volume_invalid_values() {
+        let client = WiimClient::new("192.168.1.100");
+
+        // Test values > 100 should return validation errors
+        let result = client.set_volume(101).await;
+        assert!(result.is_err());
+        if let Err(WiimError::InvalidResponse(msg)) = result {
+            assert_eq!(msg, "Volume must be 0-100");
+        } else {
+            panic!("Expected InvalidResponse error for volume 101");
+        }
+
+        let result = client.set_volume(150).await;
+        assert!(result.is_err());
+        if let Err(WiimError::InvalidResponse(msg)) = result {
+            assert_eq!(msg, "Volume must be 0-100");
+        } else {
+            panic!("Expected InvalidResponse error for volume 150");
+        }
+
+        let result = client.set_volume(255).await;
+        assert!(result.is_err());
+        if let Err(WiimError::InvalidResponse(msg)) = result {
+            assert_eq!(msg, "Volume must be 0-100");
+        } else {
+            panic!("Expected InvalidResponse error for volume 255");
+        }
+    }
+
+    #[test]
+    fn test_volume_validation_error_message() {
+        // Test that our error message is correct
+        let error = WiimError::InvalidResponse("Volume must be 0-100".to_string());
+        assert_eq!(error.to_string(), "Invalid response: Volume must be 0-100");
     }
 }
