@@ -45,7 +45,7 @@ wiim-control status --format json
 Create custom templates using template variables:
 
 ```bash
-wiim-control status --profile custom --template "{artist} - {title} {quality_info}"
+wiim-control --profile custom --template "{{artist}} - {{title}} {{quality_info}}" status
 ```
 **Output**: `"The Beatles - Hey Jude 192kHz/24bit"`
 
@@ -61,16 +61,16 @@ Templates are configured in `~/.config/wiim-control/config.toml`. The file is au
 device_ip = "192.168.1.100"
 
 [output.text]
-playing = "▶️ {artist} - {title} {quality_info}"
-paused = "⏸️ {artist} - {title}"
+playing = "▶️ {{artist}} - {{title}} {{quality_info}}"
+paused = "⏸️ {{artist}} - {{title}}"
 stopped = "⏹️ No music"
 loading = "⏳ Loading..."
 
 [output.json]
-text = "{artist} - {title}"
-alt = "{state}"
-tooltip = "{full_info}"
-class = "{state}"
+text = "{{artist}} - {{title}}"
+alt = "{{state}}"
+tooltip = "{{full_info}}"
+class = "{{state}}"
 
 [profiles.waybar]
 format = "json"
@@ -78,7 +78,7 @@ format = "json"
 
 [profiles.polybar]
 format = "text"
-text_template = "{artist} - {title} [{quality_info}]"
+text_template = "{{artist}} - {{title}} [{{quality_info}}]"
 ```
 
 ## Template Variables
@@ -86,10 +86,10 @@ text_template = "{artist} - {title} [{quality_info}]"
 The template system provides extensive variables for customization:
 
 ### Core Variables
-- **Track Info**: `{artist}`, `{title}`, `{album}`, `{album_art_uri}`
-- **Playback State**: `{state}`, `{volume}`, `{muted}`, `{position}`, `{duration}`
-- **Audio Quality**: `{sample_rate}`, `{bit_depth}`, `{quality_info}`
-- **Formatted Combinations**: `{track_info}`, `{full_info}`
+- **Track Info**: `{{artist}}`, `{{title}}`, `{{album}}`, `{{album_art_uri}}`
+- **Playback State**: `{{state}}`, `{{volume}}`, `{{muted}}`, `{{position}}`, `{{duration}}`
+- **Audio Quality**: `{{sample_rate}}`, `{{bit_depth}}`, `{{quality_info}}`
+- **Formatted Combinations**: `{{track_info}}`, `{{full_info}}`
 
 For complete details, see the [Template Variables Reference](variables.md).
 
@@ -105,8 +105,8 @@ Text format produces simple string output suitable for:
 **Example Configuration**:
 ```toml
 [output.text]
-playing = "▶️ {artist} - {title} {quality_info}"
-paused = "⏸️ {artist} - {title}"
+playing = "▶️ {{artist}} - {{title}} {{quality_info}}"
+paused = "⏸️ {{artist}} - {{title}}"
 stopped = "⏹️ No music"
 loading = "⏳ Loading..."
 ```
@@ -121,11 +121,11 @@ JSON format produces structured output compatible with:
 **Example Configuration**:
 ```toml
 [output.json]
-text = "{artist} - {title}"
-alt = "{state}"
-tooltip = "{full_info}"
-class = "{state}"
-percentage = "{volume}"
+text = "{{artist}} - {{title}}"
+alt = "{{state}}"
+tooltip = "{{full_info}}"
+class = "{{state}}"
+percentage = "{{volume}}"
 ```
 
 **Output Structure**:
@@ -150,7 +150,7 @@ Profiles allow you to define different configurations for different tools and us
 wiim-control status --profile waybar
 
 # Override template for any profile
-wiim-control status --profile polybar --template "{track_info} | {volume}%"
+wiim-control --profile polybar --template "{{track_info}} | {{volume}}%" status
 ```
 
 ### Profile Configuration
@@ -162,11 +162,11 @@ format = "json"
 
 [profiles.polybar]
 format = "text"
-text_template = "{artist} - {title} [{quality_info}]"
+text_template = "{{artist}} - {{title}} [{{quality_info}}]"
 
 [profiles.i3blocks]
 format = "text"
-text_template = "{track_info} | {volume}%"
+text_template = "{{track_info}} | {{volume}}%"
 ```
 
 ## Template Syntax
@@ -175,35 +175,35 @@ The template system uses Handlebars syntax:
 
 ### Basic Variable Substitution
 ```
-{variable_name}
+{{variable_name}}
 ```
 
 ### Common Patterns
 
 #### Artist and Title
 ```
-{artist} - {title}
+{{artist}} - {{title}}
 ```
 
 #### With Quality Information
 ```
-{artist} - {title} {quality_info}
+{{artist}} - {{title}} {{quality_info}}
 ```
 
 #### Status Icons
 ```
-▶️ {track_info}  # Playing
-⏸️ {track_info}  # Paused
-⏹️ No music      # Stopped
-⏳ Loading...     # Loading
+▶️ {{track_info}}  # Playing
+⏸️ {{track_info}}  # Paused
+⏹️ No music        # Stopped
+⏳ Loading...       # Loading
 ```
 
 #### Multi-line Tooltips
 ```
-{title}
-Artist: {artist}
-Volume: {volume}%
-Quality: {quality_info}
+{{title}}
+Artist: {{artist}}
+Volume: {{volume}}%
+Quality: {{quality_info}}
 ```
 
 ## Error Handling
@@ -226,7 +226,7 @@ The system gracefully handles missing data:
 
 ### Smart Fallbacks
 
-The `{track_info}` variable provides intelligent fallbacks:
+The `{{track_info}}` variable provides intelligent fallbacks:
 - If both artist and title available: `"Artist - Title"`
 - If only artist available: `"Artist"`
 - If only title available: `"Title"`
@@ -236,9 +236,9 @@ The `{track_info}` variable provides intelligent fallbacks:
 ### Pre-formatted Combinations
 
 Several variables provide pre-formatted combinations:
-- `{quality_info}`: `"192kHz/24bit"`
-- `{track_info}`: Smart artist-title combination
-- `{full_info}`: Complete multi-line information
+- `{{quality_info}}`: `"192kHz/24bit"`
+- `{{track_info}}`: Smart artist-title combination
+- `{{full_info}}`: Complete multi-line information
 
 ### Performance Optimization
 
@@ -273,20 +273,20 @@ See our integration guides:
 ### Custom Automation
 ```bash
 # Get just the artist name
-wiim-control status --profile custom --template "{artist}"
+wiim-control --profile custom --template "{{artist}}" status
 
 # Get quality information
-wiim-control status --profile custom --template "{quality_info}"
+wiim-control --profile custom --template "{{quality_info}}" status
 
 # Custom format for notifications
-wiim-control status --profile custom --template "♪ {artist} - {title}"
+wiim-control --profile custom --template "♪ {{artist}} - {{title}}" status
 ```
 
 ## Troubleshooting
 
 ### Common Issues
 
-1. **Template syntax errors**: Check for proper `{variable}` format
+1. **Template syntax errors**: Check for proper `{{variable}}` format
 2. **Missing variables**: Verify variable names against the [reference](variables.md)
 3. **Profile not found**: Check configuration file syntax and profile names
 4. **Network data unavailable**: Some variables depend on network quality data

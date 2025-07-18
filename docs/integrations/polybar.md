@@ -51,7 +51,7 @@ device_ip = "192.168.1.100"
 
 [profiles.polybar]
 format = "text"
-text_template = "{artist} - {title} [{quality_info}]"
+text_template = "{{artist}} - {{title}} [{{quality_info}}]"
 ```
 
 ## Advanced Configuration
@@ -62,21 +62,21 @@ text_template = "{artist} - {title} [{quality_info}]"
 ```toml
 [profiles.polybar-minimal]
 format = "text"
-text_template = "{track_info}"
+text_template = "{{track_info}}"
 ```
 
 #### Detailed Display
 ```toml
 [profiles.polybar-detailed]
 format = "text"
-text_template = "♪ {artist} - {title} • {quality_info} • {volume}%"
+text_template = "♪ {{artist}} - {{title}} • {{quality_info}} • {{volume}}%"
 ```
 
 #### Status Icons
 ```toml
 [profiles.polybar-icons]
 format = "text"
-text_template = "%{F#a3be8c}♪%{F-} {artist} - {title} %{F#88c0d0}[{quality_info}]%{F-}"
+text_template = "%{F#a3be8c}♪%{F-} {{artist}} - {{title}} %{F#88c0d0}[{{quality_info}}]%{F-}"
 ```
 
 ### Advanced Polybar Module
@@ -151,21 +151,21 @@ label-maxlen = 50
 ```toml
 [profiles.polybar-styled]
 format = "text"
-text_template = "%{F#a3be8c}♪%{F-} {artist} %{F#88c0d0}-%{F-} {title} %{F#d08770}[{quality_info}]%{F-}"
+text_template = "%{F#a3be8c}♪%{F-} {{artist}} %{F#88c0d0}-%{F-} {{title}} %{F#d08770}[{{quality_info}}]%{F-}"
 ```
 
 #### With Background Colors
 ```toml
 [profiles.polybar-bg]
 format = "text"
-text_template = "%{B#3b4252}%{F#d8dee9} {artist} - {title} %{B-}%{F-}"
+text_template = "%{B#3b4252}%{F#d8dee9} {{artist}} - {{title}} %{B-}%{F-}"
 ```
 
 #### With Clickable Areas
 ```toml
 [profiles.polybar-clickable]
 format = "text"
-text_template = "%{A1:wiim-control toggle:}%{A3:wiim-control next:}♪ {artist} - {title}%{A}%{A}"
+text_template = "%{A1:wiim-control toggle:}%{A3:wiim-control next:}♪ {{artist}} - {{title}}%{A}%{A}"
 ```
 
 ## State-Based Styling
@@ -179,7 +179,7 @@ Create `~/.config/polybar/scripts/wiim-music.sh`:
 
 # Get current status
 OUTPUT=$(wiim-control --profile polybar status)
-STATE=$(wiim-control status --profile custom --template "{state}")
+STATE=$(wiim-control status --profile custom --template "{{state}}")
 
 # Apply styling based on state
 case "$STATE" in
@@ -251,12 +251,12 @@ case "$1" in
         ;;
     "next")
         wiim-control next
-        TRACK=$(wiim-control status --profile custom --template "{track_info}")
+        TRACK=$(wiim-control status --profile custom --template "{{track_info}}")
         notify-send "WiiM" "Next: $TRACK"
         ;;
     "prev")
         wiim-control prev
-        TRACK=$(wiim-control status --profile custom --template "{track_info}")
+        TRACK=$(wiim-control status --profile custom --template "{{track_info}}")
         notify-send "WiiM" "Previous: $TRACK"
         ;;
     "volume-up")
@@ -319,17 +319,17 @@ device_ip = "192.168.1.100"
 
 [profiles.polybar]
 format = "text"
-text_template = "{artist} - {title} [{quality_info}]"
+text_template = "{{artist}} - {{title}} [{{quality_info}}]"
 
 [profiles.polybar-kitchen]
 device_ip = "192.168.1.101"
 format = "text"
-text_template = "{artist} - {title}"
+text_template = "{{artist}} - {{title}}"
 
 [profiles.polybar-bedroom]
 device_ip = "192.168.1.102"
 format = "text"
-text_template = "{track_info}"
+text_template = "{{track_info}}"
 ```
 
 ## Animation and Effects
@@ -364,7 +364,7 @@ fi
 #!/bin/bash
 # ~/.config/polybar/scripts/wiim-blink.sh
 
-STATE=$(wiim-control status --profile custom --template "{state}")
+STATE=$(wiim-control status --profile custom --template "{{state}}")
 OUTPUT=$(wiim-control --profile polybar status)
 
 if [ "$STATE" = "playing" ]; then
@@ -402,7 +402,7 @@ exec-if = pgrep -x "wiim-control" > /dev/null
 
 # Cache file for last known state
 CACHE_FILE="/tmp/wiim-polybar-cache"
-CURRENT_STATE=$(wiim-control status --profile custom --template "{state}")
+CURRENT_STATE=$(wiim-control status --profile custom --template "{{state}}")
 
 # Only update if state changed or if playing
 if [ ! -f "$CACHE_FILE" ] || [ "$(cat $CACHE_FILE)" != "$CURRENT_STATE" ] || [ "$CURRENT_STATE" = "playing" ]; then
@@ -492,7 +492,7 @@ wiim-control status
 wiim-control --profile polybar status
 
 # Test template rendering
-wiim-control status --profile custom --template "{artist} - {title}"
+wiim-control status --profile custom --template "{{artist}} - {{title}}"
 
 # Check device connectivity
 wiim-control --device 192.168.1.100 status
@@ -508,7 +508,7 @@ device_ip = "192.168.1.100"
 
 [profiles.polybar]
 format = "text"
-text_template = "♪ {artist} - {title} • {quality_info} • {volume}%"
+text_template = "♪ {{artist}} - {{title}} • {{quality_info}} • {{volume}}%"
 ```
 
 **`~/.config/polybar/config`**:
