@@ -104,6 +104,7 @@ pub struct PlayerStatus {
 pub struct MetaData {
     pub album: Option<String>,
     pub title: Option<String>,
+    pub subtitle: Option<String>,
     pub artist: Option<String>,
     #[serde(rename = "albumArtURI")]
     pub album_art_uri: Option<String>,
@@ -111,6 +112,10 @@ pub struct MetaData {
     pub sample_rate: Option<String>,
     #[serde(rename = "bitDepth")]
     pub bit_depth: Option<String>,
+    #[serde(rename = "bitRate")]
+    pub bit_rate: Option<String>,
+    #[serde(rename = "trackId")]
+    pub track_id: Option<String>,
 }
 
 /// Container for track metadata response
@@ -1108,5 +1113,130 @@ mod tests {
 
         // Test security capabilities JSON object
         assert!(status_ex.security_capabilities.is_some());
+    }
+
+    #[test]
+    fn test_metadata_deserialization_complete() {
+        // Test deserialization of complete JSON response with all fields
+        let json_response = r#"{
+            "metaData": {
+                "album": "Blues for Allah",
+                "title": "Help on the Way / Slipknot!",
+                "subtitle": "unknow",
+                "artist": "Grateful Dead",
+                "albumArtURI": "https://static.qobuz.com/images/covers/78/07/0603497920778_600.jpg",
+                "sampleRate": "96000",
+                "bitDepth": "24",
+                "bitRate": "2867",
+                "trackId": "35542598"
+            }
+        }"#;
+
+        let meta_info: MetaInfo = serde_json::from_str(json_response).unwrap();
+        let meta_data = &meta_info.meta_data;
+
+        // Test all fields are correctly deserialized
+        assert_eq!(meta_data.album, Some("Blues for Allah".to_string()));
+        assert_eq!(
+            meta_data.title,
+            Some("Help on the Way / Slipknot!".to_string())
+        );
+        assert_eq!(meta_data.subtitle, Some("unknow".to_string()));
+        assert_eq!(meta_data.artist, Some("Grateful Dead".to_string()));
+        assert_eq!(
+            meta_data.album_art_uri,
+            Some("https://static.qobuz.com/images/covers/78/07/0603497920778_600.jpg".to_string())
+        );
+        assert_eq!(meta_data.sample_rate, Some("96000".to_string()));
+        assert_eq!(meta_data.bit_depth, Some("24".to_string()));
+        assert_eq!(meta_data.bit_rate, Some("2867".to_string()));
+        assert_eq!(meta_data.track_id, Some("35542598".to_string()));
+    }
+
+    #[test]
+    fn test_metadata_deserialization_partial() {
+        // Test deserialization with missing optional fields (backward compatibility)
+        let json_response = r#"{
+            "metaData": {
+                "album": "Test Album",
+                "title": "Test Title",
+                "artist": "Test Artist"
+            }
+        }"#;
+
+        let meta_info: MetaInfo = serde_json::from_str(json_response).unwrap();
+        let meta_data = &meta_info.meta_data;
+
+        // Test existing fields are present
+        assert_eq!(meta_data.album, Some("Test Album".to_string()));
+        assert_eq!(meta_data.title, Some("Test Title".to_string()));
+        assert_eq!(meta_data.artist, Some("Test Artist".to_string()));
+
+        // Test new fields default to None when missing
+        assert_eq!(meta_data.subtitle, None);
+        assert_eq!(meta_data.album_art_uri, None);
+        assert_eq!(meta_data.sample_rate, None);
+        assert_eq!(meta_data.bit_depth, None);
+        assert_eq!(meta_data.bit_rate, None);
+        assert_eq!(meta_data.track_id, None);
+    }
+
+    #[test]
+    fn test_metadata_deserialization_empty() {
+        // Test deserialization with empty metadata object
+        let json_response = r#"{
+            "metaData": {}
+        }"#;
+
+        let meta_info: MetaInfo = serde_json::from_str(json_response).unwrap();
+        let meta_data = &meta_info.meta_data;
+
+        // Test all fields are None when missing
+        assert_eq!(meta_data.album, None);
+        assert_eq!(meta_data.title, None);
+        assert_eq!(meta_data.subtitle, None);
+        assert_eq!(meta_data.artist, None);
+        assert_eq!(meta_data.album_art_uri, None);
+        assert_eq!(meta_data.sample_rate, None);
+        assert_eq!(meta_data.bit_depth, None);
+        assert_eq!(meta_data.bit_rate, None);
+        assert_eq!(meta_data.track_id, None);
+    }
+
+    #[test]
+    fn test_metadata_field_accessibility() {
+        // Test that all fields are accessible through public API
+        let json_response = r#"{
+            "metaData": {
+                "album": "Test Album",
+                "title": "Test Title",
+                "subtitle": "Test Subtitle",
+                "artist": "Test Artist",
+                "albumArtURI": "https://example.com/art.jpg",
+                "sampleRate": "44100",
+                "bitDepth": "16",
+                "bitRate": "320",
+                "trackId": "12345"
+            }
+        }"#;
+
+        let meta_info: MetaInfo = serde_json::from_str(json_response).unwrap();
+        let meta_data = &meta_info.meta_data;
+
+        // Test field accessibility and values
+        assert!(meta_data.album.is_some());
+        assert!(meta_data.title.is_some());
+        assert!(meta_data.subtitle.is_some());
+        assert!(meta_data.artist.is_some());
+        assert!(meta_data.album_art_uri.is_some());
+        assert!(meta_data.sample_rate.is_some());
+        assert!(meta_data.bit_depth.is_some());
+        assert!(meta_data.bit_rate.is_some());
+        assert!(meta_data.track_id.is_some());
+
+        // Test specific values for new fields
+        assert_eq!(meta_data.subtitle.as_ref().unwrap(), "Test Subtitle");
+        assert_eq!(meta_data.bit_rate.as_ref().unwrap(), "320");
+        assert_eq!(meta_data.track_id.as_ref().unwrap(), "12345");
     }
 }
