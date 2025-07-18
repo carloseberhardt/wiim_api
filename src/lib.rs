@@ -919,15 +919,15 @@ mod tests {
         };
 
         // Test connected
-        assert_eq!(status_ex.has_internet(), true);
+        assert!(status_ex.has_internet());
 
         // Test not connected
         status_ex.internet = Some("0".to_string());
-        assert_eq!(status_ex.has_internet(), false);
+        assert!(!status_ex.has_internet());
 
         // Test None
         status_ex.internet = None;
-        assert_eq!(status_ex.has_internet(), false);
+        assert!(!status_ex.has_internet());
     }
 
     #[test]
@@ -1101,7 +1101,7 @@ mod tests {
         assert_eq!(status_ex.eq_version, Some("4.3".to_string()));
 
         // Test helper methods
-        assert_eq!(status_ex.has_internet(), true);
+        assert!(status_ex.has_internet());
         assert_eq!(status_ex.rssi_dbm(), Some(-45));
         assert_eq!(status_ex.data_rate_mbps(), Some(390));
         assert_eq!(status_ex.signal_quality(), Some("Excellent".to_string()));
