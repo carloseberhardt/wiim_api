@@ -9,7 +9,7 @@ A Rust library for controlling WiiM audio streaming devices via their HTTP API.
 ## Features
 
 - 🎵 **Now Playing Info** - Get current track metadata including title, artist, album, and cover art
-- ⏯️ **Playback Control** - Play, pause, stop, next/previous track  
+- ⏯️ **Playback Control** - Play, pause, stop, next/previous track
 - 🔊 **Volume Control** - Set volume (0-100), mute/unmute
 - 🔗 **Connection Management** - Test connectivity and configure target IP
 - 🛡️ **Async & Safe** - Built with `tokio` and proper error handling
@@ -34,9 +34,9 @@ async fn main() -> Result<()> {
     // Connect to your WiiM device
     let client = WiimClient::connect("192.168.1.100").await?;
 
-    // Get now playing information  
+    // Get now playing information
     let now_playing = client.get_now_playing().await?;
-    println!("♪ {} - {}", 
+    println!("♪ {} - {}",
         now_playing.artist.unwrap_or_default(),
         now_playing.title.unwrap_or_default()
     );
@@ -44,7 +44,7 @@ async fn main() -> Result<()> {
     // Control playback
     client.set_volume(75).await?;
     client.pause().await?;
-    
+
     Ok(())
 }
 ```
@@ -57,37 +57,37 @@ use wiim_api::{WiimClient, PlayState};
 #[tokio::main]
 async fn main() -> wiim_api::Result<()> {
     let client = WiimClient::new("192.168.1.100");
-    
+
     // Test if device is reachable
     if client.test_connection().await.is_ok() {
         println!("Device is online!");
-        
+
         // Get detailed track info
         let info = client.get_now_playing().await?;
-        
+
         match info.state {
             PlayState::Playing => {
-                println!("🎵 Now playing: {} - {}", 
+                println!("🎵 Now playing: {} - {}",
                     info.artist.unwrap_or("Unknown".to_string()),
                     info.title.unwrap_or("Unknown".to_string())
                 );
-                
+
                 if let Some(cover_url) = info.album_art_uri {
                     println!("🎨 Album art: {}", cover_url);
                 }
-                
-                println!("📊 {}kHz/{}bit • Volume: {}%", 
+
+                println!("📊 {}kHz/{}bit • Volume: {}%",
                     info.sample_rate.unwrap_or_default(),
                     info.bit_depth.unwrap_or_default(),
                     info.volume
                 );
             }
             PlayState::Paused => println!("⏸️ Playback paused"),
-            PlayState::Stopped => println!("⏹️ Playback stopped"), 
+            PlayState::Stopped => println!("⏹️ Playback stopped"),
             PlayState::Loading => println!("⏳ Loading..."),
         }
     }
-    
+
     Ok(())
 }
 ```
@@ -153,7 +153,7 @@ let metadata = client.get_meta_info().await?;
 Your WiiM device's IP address can be found in several ways:
 
 - **Router admin page** - Usually `192.168.1.1` or `192.168.0.1`
-- **WiiM Home app** - Settings → Device Info  
+- **WiiM Home app** - Settings → Device Info
 - **Network scanner** - Apps like "Fing" or "Advanced IP Scanner"
 - **Command line** - `nmap -sn 192.168.1.0/24` (scan your network)
 
@@ -163,7 +163,7 @@ Your WiiM device's IP address can be found in several ways:
 
 This library focuses on **playback monitoring and control**. Key implemented features:
 - ✅ Now playing information and track metadata
-- ✅ Playback control (play/pause/stop/next/prev)  
+- ✅ Playback control (play/pause/stop/next/prev)
 - ✅ Volume control and muting
 - ✅ Connection testing and IP configuration
 
@@ -180,7 +180,7 @@ See [API_COVERAGE.md](API_COVERAGE.md) for detailed gap analysis and roadmap.
 This library should work with all WiiM devices that support the HTTP API:
 
 - WiiM Mini
-- WiiM Pro  
+- WiiM Pro
 - WiiM Pro Plus
 - WiiM Amp
 
@@ -190,7 +190,7 @@ The `examples/` directory contains:
 
 - `basic_usage.rs` - Simple getting started example
 - `test_device.rs` - Test connection and get device info
-- `test_controls.rs` - Test all playback and volume controls  
+- `test_controls.rs` - Test all playback and volume controls
 - `test_metadata.rs` - Explore all available metadata fields
 - `waybar_config.json` - Example waybar configuration
 
@@ -236,6 +236,43 @@ match client.get_now_playing().await {
 ## Contributing
 
 Contributions are welcome! Please feel free to submit a Pull Request.
+
+### Development Setup
+
+1. **Clone the repository:**
+   ```bash
+   git clone https://github.com/your-username/wiim_api.git
+   cd wiim_api
+   ```
+
+2. **Install pre-commit hooks:**
+   ```bash
+   # Install pre-commit (if not already installed)
+   pip install pre-commit
+   # or on Arch Linux: pacman -S python-pre-commit
+
+   # Install hooks for this repository
+   pre-commit install
+   ```
+
+3. **Make your changes and commit:**
+   ```bash
+   # Pre-commit hooks will automatically run:
+   # - cargo fmt (code formatting)
+   # - cargo clippy (linting)
+   # - Basic file checks
+   git commit -m "Your changes"
+   ```
+
+### Testing Guidelines
+
+- **Prefer unit tests** that don't require actual WiiM devices
+- **Use integration tests sparingly** - name them `test_*_integration`
+- **Run tests:** `cargo test`
+- **Check formatting:** `cargo fmt --check`
+- **Run linter:** `cargo clippy`
+
+The CI will automatically run these checks on your PR.
 
 ## License
 
