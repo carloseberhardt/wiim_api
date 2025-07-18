@@ -15,9 +15,17 @@ struct Cli {
     #[arg(short, long)]
     device: Option<String>,
 
-    /// Output format for status command
-    #[arg(short, long, default_value = "text")]
-    format: OutputFormat,
+    /// Output format (legacy, use --profile instead)
+    #[arg(short, long)]
+    format: Option<OutputFormat>,
+
+    /// Output profile (waybar, polybar, custom)
+    #[arg(short, long)]
+    profile: Option<String>,
+
+    /// Template string override (requires --profile)
+    #[arg(short, long)]
+    template: Option<String>,
 
     /// Config file path (default: ~/.config/wiim-control/config.toml)
     #[arg(short, long)]
@@ -27,7 +35,7 @@ struct Cli {
     command: Commands,
 }
 
-#[derive(Clone, clap::ValueEnum)]
+#[derive(Debug, Clone, clap::ValueEnum)]
 enum OutputFormat {
     Text,
     Json,
@@ -153,6 +161,13 @@ impl Default for Config {
             profiles: None,
         }
     }
+}
+
+#[derive(Debug, Clone)]
+struct ResolvedProfile {
+    format: OutputFormat,
+    text_template: Option<String>,
+    json_templates: Option<JsonTemplatesResolved>,
 }
 
 impl From<&wiim_api::NowPlaying> for TemplateContext {
@@ -295,12 +310,114 @@ impl From<&wiim_api::NowPlaying> for TemplateContext {
     }
 }
 
+fn validate_template(template: &str) -> Result<(), String> {
+    let mut handlebars = Handlebars::new();
+    handlebars
+        .register_template_string("validation", template)
+        .map_err(|e| e.to_string())?;
+    Ok(())
+}
+
+fn resolve_profile(cli: &Cli, config: &Config) -> Result<ResolvedProfile, String> {
+    // 1. CLI --template argument (highest priority)
+    if let Some(template) = &cli.template {
+        // We already validated that --template requires --profile
+        let profile_name = cli.profile.as_ref().unwrap();
+
+        // Validate template syntax
+        if let Err(e) = validate_template(template) {
+            return Err(format!("Invalid template syntax: {e}"));
+        }
+
+        // For template override, we need to determine the output format
+        // Check if the profile exists in config first, otherwise default to text
+        let format = if let Some(profiles) = &config.profiles {
+            if let Some(profile_config) = profiles.get(profile_name) {
+                match profile_config.format.as_deref() {
+                    Some("json") => OutputFormat::Json,
+                    _ => OutputFormat::Text,
+                }
+            } else {
+                OutputFormat::Text
+            }
+        } else {
+            OutputFormat::Text
+        };
+
+        return Ok(ResolvedProfile {
+            format,
+            text_template: Some(template.clone()),
+            json_templates: None,
+        });
+    }
+
+    // 2. CLI --profile argument
+    if let Some(profile_name) = &cli.profile {
+        if let Some(profiles) = &config.profiles {
+            if let Some(profile_config) = profiles.get(profile_name) {
+                let format = match profile_config.format.as_deref() {
+                    Some("json") => OutputFormat::Json,
+                    _ => OutputFormat::Text,
+                };
+
+                return Ok(ResolvedProfile {
+                    format,
+                    text_template: profile_config.text_template.clone(),
+                    json_templates: profile_config.json_template.as_ref().map(|_| {
+                        // For now, we'll use the default JSON templates
+                        // This could be enhanced later to support JSON template overrides
+                        get_json_templates(config)
+                    }),
+                });
+            } else {
+                let available_profiles = profiles.keys().map(|k| k.as_str()).collect::<Vec<_>>();
+                let available_list = available_profiles.join(", ");
+                return Err(format!(
+                    "Profile '{profile_name}' not found in configuration. Available profiles: {available_list}"
+                ));
+            }
+        } else {
+            return Err(format!(
+                "Profile '{profile_name}' not found in configuration. No profiles are configured."
+            ));
+        }
+    }
+
+    // 3. CLI --format argument (legacy, maps to default profiles)
+    if let Some(format) = &cli.format {
+        return Ok(ResolvedProfile {
+            format: format.clone(),
+            text_template: None,
+            json_templates: None,
+        });
+    }
+
+    // 4. Config file default profile
+    // For now, we'll skip this as the config structure doesn't have a default profile field
+
+    // 5. Built-in default (backward compatibility)
+    Ok(ResolvedProfile {
+        format: OutputFormat::Text,
+        text_template: None,
+        json_templates: None,
+    })
+}
+
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let cli = Cli::parse();
 
+    // Validate that --template requires --profile
+    if cli.template.is_some() && cli.profile.is_none() {
+        return Err("--template requires --profile to be specified".into());
+    }
+
     // Load configuration
     let config = load_config(&cli.config).await?;
+
+    // Resolve profile configuration
+    let resolved_profile =
+        resolve_profile(&cli, &config).map_err(|e| format!("Profile resolution error: {e}"))?;
 
     // Get device IP from CLI arg or config
     let device_ip = cli.device.as_ref().unwrap_or(&config.device_ip);
@@ -311,7 +428,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Execute command
     match cli.command {
         Commands::Status => {
-            handle_status(&client, &cli.format, &config).await?;
+            handle_status(&client, &resolved_profile, &config).await?;
         }
         Commands::Play => {
             client.resume().await?;
@@ -364,20 +481,32 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
 async fn handle_status(
     client: &WiimClient,
-    format: &OutputFormat,
+    resolved_profile: &ResolvedProfile,
     config: &Config,
 ) -> WiimResult<()> {
     let now_playing = client.get_now_playing().await?;
     let context = TemplateContext::from(&now_playing);
 
-    match format {
+    match resolved_profile.format {
         OutputFormat::Text => {
-            let template = get_text_template(config, &now_playing.state);
+            let template = if let Some(text_template) = &resolved_profile.text_template {
+                // Use the resolved template from profile or CLI override
+                text_template.clone()
+            } else {
+                // Fall back to the existing template resolution logic
+                get_text_template(config, &now_playing.state)
+            };
             let output = render_template(&template, &context)?;
             println!("{output}");
         }
         OutputFormat::Json => {
-            let templates = get_json_templates(config);
+            let templates = if let Some(json_templates) = &resolved_profile.json_templates {
+                // Use the resolved JSON templates from profile
+                json_templates.clone()
+            } else {
+                // Fall back to the existing template resolution logic
+                get_json_templates(config)
+            };
             let output = StatusOutput {
                 text: render_template(&templates.text, &context)?,
                 alt: render_template(&templates.alt, &context)?,
@@ -419,6 +548,7 @@ fn get_text_template(config: &Config, state: &PlayState) -> String {
     format!("{default_icon} {{{{track_info}}}}")
 }
 
+#[derive(Debug, Clone)]
 struct JsonTemplatesResolved {
     text: String,
     alt: String,
