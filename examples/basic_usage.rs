@@ -1,4 +1,4 @@
-use wiim_api::{WiimClient, Result};
+use wiim_api::{Result, WiimClient};
 
 #[tokio::main]
 async fn main() -> Result<()> {

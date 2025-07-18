@@ -1,9 +1,9 @@
-use wiim_api::{WiimClient, Result};
+use wiim_api::{Result, WiimClient};
 
 #[tokio::main]
 async fn main() -> Result<()> {
     println!("Testing connection to WiiM device at 192.168.86.52...");
-    
+
     // Test connection first
     let client = match WiimClient::connect("192.168.86.52").await {
         Ok(client) => {
@@ -15,7 +15,7 @@ async fn main() -> Result<()> {
             return Err(e);
         }
     };
-    
+
     // Get current status
     println!("\n📊 Getting player status...");
     match client.get_player_status().await {
@@ -26,7 +26,7 @@ async fn main() -> Result<()> {
         }
         Err(e) => println!("Failed to get status: {}", e),
     }
-    
+
     // Get metadata
     println!("\n🎵 Getting now playing info...");
     match client.get_now_playing().await {
@@ -45,7 +45,7 @@ async fn main() -> Result<()> {
         }
         Err(e) => println!("Failed to get now playing: {}", e),
     }
-    
+
     println!("\n✅ Test completed!");
     Ok(())
 }
