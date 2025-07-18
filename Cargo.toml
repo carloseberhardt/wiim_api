@@ -1,12 +1,29 @@
 [package]
 name = "wiim_api"
 version = "0.1.0"
-edition = "2024"
+edition = "2021"
 license = "MIT OR Apache-2.0"
-description = "A Rust library for controlling WiiM audio streaming devices via their HTTP API"
+description = "A Rust library and CLI tool for controlling WiiM audio streaming devices via their HTTP API"
 repository = "https://github.com/carloseberhardt/wiim_api"
 keywords = ["wiim", "audio", "streaming", "api", "music"]
 categories = ["api-bindings", "multimedia::audio"]
+authors = ["Carlos Eberhardt <carlos.eberhardt@gmail.com>"]
+readme = "README.md"
+documentation = "https://docs.rs/wiim_api"
+homepage = "https://github.com/carloseberhardt/wiim_api"
+exclude = [
+    "tests/",
+    "examples/",
+    "docs/",
+    "internal_docs/",
+    ".github/",
+    ".gitignore",
+    ".pre-commit-config.yaml",
+    "API_COVERAGE.md",
+    "CLAUDE.md",
+    "*.md",
+    "!README.md",
+]
 
 [[bin]]
 name = "wiim-control"
