@@ -23,7 +23,9 @@ async fn main() -> Result<()> {
     // Test 2: Manual get+set with same client
     let start = Instant::now();
     let status = client.get_player_status().await?;
-    let current: u8 = status.vol.parse().unwrap_or(0);
+    let current: u8 = status.vol.parse().map_err(|_| {
+        wiim_api::WiimError::InvalidResponse(format!("Invalid volume: {}", status.vol))
+    })?;
     client.set_volume(current + 1).await?;
     let manual_same_client_time = start.elapsed();
     println!("Manual same client: {:?}", manual_same_client_time);
@@ -35,7 +37,9 @@ async fn main() -> Result<()> {
     let start = Instant::now();
     let client1 = WiimClient::new("192.168.86.52");
     let status = client1.get_player_status().await?;
-    let current: u8 = status.vol.parse().unwrap_or(0);
+    let current: u8 = status.vol.parse().map_err(|_| {
+        wiim_api::WiimError::InvalidResponse(format!("Invalid volume: {}", status.vol))
+    })?;
     let client2 = WiimClient::new("192.168.86.52");
     client2.set_volume(current + 1).await?;
     let manual_new_clients_time = start.elapsed();
