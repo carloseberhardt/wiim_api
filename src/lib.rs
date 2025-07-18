@@ -29,7 +29,7 @@
 //!     // Control playback
 //!     client.set_volume(75).await?;
 //!     client.pause().await?;
-//!     
+//!
 //!     Ok(())
 //! }
 //! ```
@@ -146,6 +146,27 @@ pub struct NowPlaying {
 }
 
 impl WiimClient {
+    /// Parse volume string to u8 with proper error handling
+    fn parse_volume(vol_str: &str) -> Result<u8> {
+        vol_str
+            .parse()
+            .map_err(|_| WiimError::InvalidResponse(format!("Invalid volume value: {vol_str}")))
+    }
+
+    /// Parse duration string to u64 with proper error handling
+    fn parse_duration(duration_str: &str) -> Result<u64> {
+        duration_str.parse().map_err(|_| {
+            WiimError::InvalidResponse(format!("Invalid duration value: {duration_str}"))
+        })
+    }
+
+    /// Parse position string to u64 with proper error handling
+    fn parse_position(position_str: &str) -> Result<u64> {
+        position_str.parse().map_err(|_| {
+            WiimError::InvalidResponse(format!("Invalid position value: {position_str}"))
+        })
+    }
+
     /// Create a new client with the device's IP address
     ///
     /// # Examples
@@ -159,7 +180,7 @@ impl WiimClient {
         let base_url = if ip_address.starts_with("http") {
             ip_address.to_string()
         } else {
-            format!("https://{}", ip_address)
+            format!("https://{ip_address}")
         };
 
         // Configure client to accept self-signed certificates (WiiM devices use them)
@@ -206,7 +227,7 @@ impl WiimClient {
         self.base_url = if ip_address.starts_with("http") {
             ip_address.to_string()
         } else {
-            format!("https://{}", ip_address)
+            format!("https://{ip_address}")
         };
     }
 
@@ -224,7 +245,7 @@ impl WiimClient {
     /// #[tokio::main]
     /// async fn main() -> wiim_api::Result<()> {
     ///     let client = WiimClient::new("192.168.1.100");
-    ///     
+    ///
     ///     if client.test_connection().await.is_ok() {
     ///         println!("Device is reachable!");
     ///     } else {
@@ -239,7 +260,7 @@ impl WiimClient {
     }
 
     async fn send_command(&self, command: &str) -> Result<String> {
-        let url = format!("{}/httpapi.asp?command={}", self.base_url, command);
+        let url = format!("{}/httpapi.asp?command={command}", self.base_url);
         let response = self.client.get(&url).send().await?;
         let text = response.text().await?;
         Ok(text)
@@ -257,6 +278,11 @@ impl WiimClient {
         Ok(meta)
     }
 
+    /// Get comprehensive now playing information combining playback status and track metadata
+    ///
+    /// # Errors
+    /// Returns `WiimError::InvalidResponse` if the device returns malformed data that cannot be parsed
+    /// (e.g., invalid volume, position, or duration values)
     pub async fn get_now_playing(&self) -> Result<NowPlaying> {
         let (status, meta) = tokio::try_join!(self.get_player_status(), self.get_meta_info())?;
 
@@ -268,10 +294,10 @@ impl WiimClient {
             _ => PlayState::Stopped,
         };
 
-        let volume = status.vol.parse().unwrap_or(0);
+        let volume = Self::parse_volume(&status.vol)?;
         let is_muted = status.mute == "1";
-        let position_ms = status.curpos.parse().unwrap_or(0);
-        let duration_ms = status.totlen.parse().unwrap_or(0);
+        let position_ms = Self::parse_position(&status.curpos)?;
+        let duration_ms = Self::parse_duration(&status.totlen)?;
 
         Ok(NowPlaying {
             title: meta.meta_data.title,
@@ -303,10 +329,10 @@ impl WiimClient {
     /// #[tokio::main]
     /// async fn main() -> wiim_api::Result<()> {
     ///     let client = WiimClient::new("192.168.1.100");
-    ///     
+    ///
     ///     // Valid usage
     ///     client.set_volume(75).await?;
-    ///     
+    ///
     ///     // Invalid usage - returns error
     ///     match client.set_volume(150).await {
     ///         Err(wiim_api::WiimError::InvalidResponse(msg)) => println!("Error: {}", msg),
@@ -321,26 +347,32 @@ impl WiimClient {
                 "Volume must be 0-100".to_string(),
             ));
         }
-        let command = format!("setPlayerCmd:vol:{}", volume);
+        let command = format!("setPlayerCmd:vol:{volume}");
         self.send_command(&command).await?;
         Ok(())
     }
 
     /// Increase volume by specified amount (default 5)
+    ///
+    /// # Errors
+    /// Returns `WiimError::InvalidResponse` if the device returns an invalid volume value that cannot be parsed
     pub async fn volume_up(&self, step: Option<u8>) -> Result<u8> {
         let step = step.unwrap_or(5);
         let current_status = self.get_player_status().await?;
-        let current_volume: u8 = current_status.vol.parse().unwrap_or(0);
+        let current_volume = Self::parse_volume(&current_status.vol)?;
         let new_volume = (current_volume.saturating_add(step)).min(100);
         self.set_volume(new_volume).await?;
         Ok(new_volume)
     }
 
     /// Decrease volume by specified amount (default 5)
+    ///
+    /// # Errors
+    /// Returns `WiimError::InvalidResponse` if the device returns an invalid volume value that cannot be parsed
     pub async fn volume_down(&self, step: Option<u8>) -> Result<u8> {
         let step = step.unwrap_or(5);
         let current_status = self.get_player_status().await?;
-        let current_volume: u8 = current_status.vol.parse().unwrap_or(0);
+        let current_volume = Self::parse_volume(&current_status.vol)?;
         let new_volume = current_volume.saturating_sub(step);
         self.set_volume(new_volume).await?;
         Ok(new_volume)
@@ -412,19 +444,19 @@ mod tests {
     fn test_set_volume_validation_logic() {
         // Test the validation logic directly without network calls
         // This tests that valid volumes would pass validation
-        
+
         // These values should pass the validation check (volume <= 100)
         let valid_volumes = [0, 1, 50, 99, 100];
         for volume in valid_volumes {
             // The validation logic: if volume > 100
-            assert!(!(volume > 100), "Volume {} should be valid", volume);
+            assert!(volume <= 100, "Volume {volume} should be valid");
         }
-        
+
         // These values should fail the validation check (volume > 100)
         let invalid_volumes = [101, 150, 200, 255];
         for volume in invalid_volumes {
             // The validation logic: if volume > 100
-            assert!(volume > 100, "Volume {} should be invalid", volume);
+            assert!(volume > 100, "Volume {volume} should be invalid");
         }
     }
 
@@ -463,5 +495,97 @@ mod tests {
         // Test that our error message is correct
         let error = WiimError::InvalidResponse("Volume must be 0-100".to_string());
         assert_eq!(error.to_string(), "Invalid response: Volume must be 0-100");
+    }
+
+    #[test]
+    fn test_parse_volume_valid_inputs() {
+        // Test valid volume parsing
+        assert_eq!(WiimClient::parse_volume("0").unwrap(), 0);
+        assert_eq!(WiimClient::parse_volume("50").unwrap(), 50);
+        assert_eq!(WiimClient::parse_volume("100").unwrap(), 100);
+    }
+
+    #[test]
+    fn test_parse_volume_invalid_inputs() {
+        // Test invalid volume parsing returns appropriate errors
+        let result = WiimClient::parse_volume("invalid");
+        assert!(result.is_err());
+        if let Err(WiimError::InvalidResponse(msg)) = result {
+            assert_eq!(msg, "Invalid volume value: invalid");
+        } else {
+            panic!("Expected InvalidResponse error");
+        }
+
+        let result = WiimClient::parse_volume("");
+        assert!(result.is_err());
+        if let Err(WiimError::InvalidResponse(msg)) = result {
+            assert_eq!(msg, "Invalid volume value: ");
+        } else {
+            panic!("Expected InvalidResponse error");
+        }
+
+        let result = WiimClient::parse_volume("256");
+        assert!(result.is_err());
+        if let Err(WiimError::InvalidResponse(msg)) = result {
+            assert_eq!(msg, "Invalid volume value: 256");
+        } else {
+            panic!("Expected InvalidResponse error");
+        }
+    }
+
+    #[test]
+    fn test_parse_duration_valid_inputs() {
+        // Test valid duration parsing
+        assert_eq!(WiimClient::parse_duration("0").unwrap(), 0);
+        assert_eq!(WiimClient::parse_duration("30000").unwrap(), 30000);
+        assert_eq!(WiimClient::parse_duration("180000").unwrap(), 180000);
+    }
+
+    #[test]
+    fn test_parse_duration_invalid_inputs() {
+        // Test invalid duration parsing returns appropriate errors
+        let result = WiimClient::parse_duration("not_a_number");
+        assert!(result.is_err());
+        if let Err(WiimError::InvalidResponse(msg)) = result {
+            assert_eq!(msg, "Invalid duration value: not_a_number");
+        } else {
+            panic!("Expected InvalidResponse error");
+        }
+
+        let result = WiimClient::parse_duration("3.14");
+        assert!(result.is_err());
+        if let Err(WiimError::InvalidResponse(msg)) = result {
+            assert_eq!(msg, "Invalid duration value: 3.14");
+        } else {
+            panic!("Expected InvalidResponse error");
+        }
+    }
+
+    #[test]
+    fn test_parse_position_valid_inputs() {
+        // Test valid position parsing
+        assert_eq!(WiimClient::parse_position("0").unwrap(), 0);
+        assert_eq!(WiimClient::parse_position("15000").unwrap(), 15000);
+        assert_eq!(WiimClient::parse_position("90000").unwrap(), 90000);
+    }
+
+    #[test]
+    fn test_parse_position_invalid_inputs() {
+        // Test invalid position parsing returns appropriate errors
+        let result = WiimClient::parse_position("invalid_pos");
+        assert!(result.is_err());
+        if let Err(WiimError::InvalidResponse(msg)) = result {
+            assert_eq!(msg, "Invalid position value: invalid_pos");
+        } else {
+            panic!("Expected InvalidResponse error");
+        }
+
+        let result = WiimClient::parse_position("-100");
+        assert!(result.is_err());
+        if let Err(WiimError::InvalidResponse(msg)) = result {
+            assert_eq!(msg, "Invalid position value: -100");
+        } else {
+            panic!("Expected InvalidResponse error");
+        }
     }
 }

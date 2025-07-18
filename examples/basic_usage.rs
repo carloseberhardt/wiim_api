@@ -6,7 +6,7 @@ async fn main() -> Result<()> {
 
     println!("Getting now playing info...");
     let now_playing = client.get_now_playing().await?;
-    println!("Now Playing: {:?}", now_playing);
+    println!("Now Playing: {now_playing:?}");
 
     println!("Setting volume to 50...");
     client.set_volume(50).await?;

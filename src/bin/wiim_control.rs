@@ -131,15 +131,15 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         }
         Commands::Volume { level } => {
             client.set_volume(level).await?;
-            println!("🔊 Volume set to {}%", level);
+            println!("🔊 Volume set to {level}%");
         }
         Commands::VolumeUp { step } => {
             let new_volume = client.volume_up(Some(step)).await?;
-            println!("🔊 Volume up to {}%", new_volume);
+            println!("🔊 Volume up to {new_volume}%");
         }
         Commands::VolumeDown { step } => {
             let new_volume = client.volume_down(Some(step)).await?;
-            println!("🔊 Volume down to {}%", new_volume);
+            println!("🔊 Volume down to {new_volume}%");
         }
         Commands::Mute => {
             client.mute().await?;
@@ -167,7 +167,7 @@ async fn handle_status(client: &WiimClient, format: &OutputFormat) -> WiimResult
             };
 
             let track_info = format_track_info(&now_playing);
-            println!("{} {}", status_icon, track_info);
+            println!("{status_icon} {track_info}");
         }
         OutputFormat::Json => {
             let status_class = match now_playing.state {
@@ -197,7 +197,7 @@ async fn handle_status(client: &WiimClient, format: &OutputFormat) -> WiimResult
 
 fn format_track_info(now_playing: &wiim_api::NowPlaying) -> String {
     match (&now_playing.artist, &now_playing.title) {
-        (Some(artist), Some(title)) => format!("{} - {}", artist, title),
+        (Some(artist), Some(title)) => format!("{artist} - {title}"),
         (Some(artist), None) => artist.clone(),
         (None, Some(title)) => title.clone(),
         (None, None) => {
@@ -214,13 +214,13 @@ fn format_tooltip(now_playing: &wiim_api::NowPlaying) -> String {
     let mut parts = Vec::new();
 
     if let Some(title) = &now_playing.title {
-        parts.push(format!("Title: {}", title));
+        parts.push(format!("Title: {title}"));
     }
     if let Some(artist) = &now_playing.artist {
-        parts.push(format!("Artist: {}", artist));
+        parts.push(format!("Artist: {artist}"));
     }
     if let Some(album) = &now_playing.album {
-        parts.push(format!("Album: {}", album));
+        parts.push(format!("Album: {album}"));
     }
 
     parts.push(format!("Volume: {}%", now_playing.volume));
@@ -231,7 +231,7 @@ fn format_tooltip(now_playing: &wiim_api::NowPlaying) -> String {
 
     if let (Some(sample_rate), Some(bit_depth)) = (&now_playing.sample_rate, &now_playing.bit_depth)
     {
-        parts.push(format!("Quality: {}kHz/{}bit", sample_rate, bit_depth));
+        parts.push(format!("Quality: {sample_rate}kHz/{bit_depth}bit"));
     }
 
     // Format position/duration
@@ -242,8 +242,7 @@ fn format_tooltip(now_playing: &wiim_api::NowPlaying) -> String {
         let dur_sec = (now_playing.duration_ms % 60000) / 1000;
 
         parts.push(format!(
-            "Time: {}:{:02} / {}:{:02}",
-            pos_min, pos_sec, dur_min, dur_sec
+            "Time: {pos_min}:{pos_sec:02} / {dur_min}:{dur_sec:02}"
         ));
     }
 
