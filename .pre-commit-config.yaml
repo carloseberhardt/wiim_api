@@ -16,4 +16,4 @@ repos:
       - id: cargo-check
         args: ['--all-features']
       - id: clippy
-        args: ['--lib', '--', '-D', 'warnings']
+        args: ['--all-features', '--', '-D', 'warnings']
