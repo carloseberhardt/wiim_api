@@ -121,45 +121,161 @@ pub struct MetaInfo {
 }
 
 /// Extended device status response from getStatusEx API
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Default)]
 pub struct StatusEx {
-    // Network Quality Fields
-    #[serde(rename = "RSSI")]
-    pub rssi: Option<String>, // "-30"
-    #[serde(rename = "wlanDataRate")]
-    pub wlan_data_rate: Option<String>, // "390"
-    #[serde(rename = "wlanFreq")]
-    pub wlan_freq: Option<String>, // "5805"
-    #[serde(rename = "WifiChannel")]
-    pub wifi_channel: Option<String>, // "0"
-    #[serde(rename = "BSSID")]
-    pub bssid: Option<String>, // "8c:25:05:1c:41:40"
-
-    // Network Status
-    pub netstat: Option<String>,  // "2"
-    pub internet: Option<String>, // "1"
-    pub apcli0: Option<String>,   // "192.168.4.62"
-    pub essid: Option<String>,    // Network SSID (encoded)
-
-    // Device Information
+    // Basic Device Information
     pub language: Option<String>, // "en_us"
     pub ssid: Option<String>,     // "WiiM Mini-8FA2"
+    #[serde(rename = "hideSSID")]
+    pub hide_ssid: Option<String>, // "0"
     pub firmware: Option<String>, // "Linkplay.4.6.425351"
+    pub build: Option<String>,    // "release"
+    pub project: Option<String>,  // "Muzo_Mini"
+    pub priv_prj: Option<String>, // "Muzo_Mini"
+    #[serde(rename = "Release")]
+    pub release: Option<String>, // "20220805"
+    #[serde(rename = "FW_Release_version")]
+    pub fw_release_version: Option<String>, // ""
+    #[serde(rename = "PCB_version")]
+    pub pcb_version: Option<String>, // "0"
+    pub group: Option<String>,    // "0"
+    pub wmrm_version: Option<String>, // "4.2"
+    pub wmrm_sub_ver: Option<String>, // "1"
+    pub expired: Option<String>,  // "0"
     pub hardware: Option<String>, // "ALLWINNER-R328"
     #[serde(rename = "DeviceName")]
     pub device_name: Option<String>, // "WiiM Mini-8FA2"
     #[serde(rename = "GroupName")]
     pub group_name: Option<String>, // "WiiM Mini-8FA2"
 
-    // Additional device fields
-    pub uuid: Option<String>,
+    // Network Configuration
+    pub internet: Option<String>, // "1"
+    pub netstat: Option<String>,  // "2"
+    pub essid: Option<String>,    // Network SSID (encoded)
+    pub apcli0: Option<String>,   // "192.168.4.62"
+    pub eth0: Option<String>,     // "0.0.0.0"
+    pub ra0: Option<String>,      // "10.10.10.254"
+
+    // Network Quality Fields
+    #[serde(rename = "RSSI")]
+    pub rssi: Option<String>, // "-30"
+    #[serde(rename = "BSSID")]
+    pub bssid: Option<String>, // "8c:25:05:1c:41:40"
+    #[serde(rename = "wlanSnr")]
+    pub wlan_snr: Option<String>, // "35"
+    #[serde(rename = "wlanNoise")]
+    pub wlan_noise: Option<String>, // "-92"
+    #[serde(rename = "wlanFreq")]
+    pub wlan_freq: Option<String>, // "5805"
+    #[serde(rename = "wlanDataRate")]
+    pub wlan_data_rate: Option<String>, // "390"
+    #[serde(rename = "WifiChannel")]
+    pub wifi_channel: Option<String>, // "0"
+
+    // Device Identifiers
+    pub uuid: Option<String>, // "FF970016A6FE22C1660AB4D8"
     #[serde(rename = "MAC")]
-    pub mac: Option<String>,
+    pub mac: Option<String>, // "08:E9:F6:8F:8F:A2"
     #[serde(rename = "BT_MAC")]
-    pub bt_mac: Option<String>,
-    pub capability: Option<String>,
-    pub streams: Option<String>,
-    pub preset_key: Option<String>,
+    pub bt_mac: Option<String>, // "08:E9:F6:8F:8F:A3"
+    #[serde(rename = "AP_MAC")]
+    pub ap_mac: Option<String>, // "0A:E9:F6:8F:8F:A2"
+    #[serde(rename = "ETH_MAC")]
+    pub eth_mac: Option<String>, // "00:00:00:00:00:00"
+
+    // Date/Time
+    pub date: Option<String>,            // "2022:08:09"
+    pub time: Option<String>,            // "07:13:16"
+    pub app_timezone_id: Option<String>, // "America/Chicago"
+    pub avs_timezone_id: Option<String>, // "America/Chicago"
+    pub tz_info_ver: Option<String>,     // "1.0"
+    pub tz: Option<String>,              // "-5.0"
+
+    // Version Information
+    pub ota_api_ver: Option<String>, // "3.0"
+    #[serde(rename = "VersionUpdate")]
+    pub version_update: Option<String>, // "0"
+    #[serde(rename = "NewVer")]
+    pub new_ver: Option<String>, // "0"
+    pub mcu_ver: Option<String>,     // "0"
+    pub mcu_ver_new: Option<String>, // "0"
+    pub update_check_count: Option<String>, // "102"
+    #[serde(rename = "BleRemote_update_checked_counter")]
+    pub ble_remote_update_checked_counter: Option<String>, // "0"
+    pub temp_uuid: Option<String>,   // "BEDA811FFC2F4D5C"
+
+    // Capabilities
+    pub cap1: Option<String>,        // "0x400"
+    pub capability: Option<String>,  // "0x20084000"
+    pub languages: Option<String>,   // "0x1ec"
+    pub streams_all: Option<String>, // "0x1edffbfd"
+    pub streams: Option<String>,     // "0x1edffbfd"
+    #[serde(rename = "ModuleColorNumber")]
+    pub module_color_number: Option<String>, // "0"
+    #[serde(rename = "ModuleColorString")]
+    pub module_color_string: Option<String>, // ""
+
+    // Audio Configuration
+    pub region: Option<String>,               // "unknown"
+    pub volume_control: Option<String>,       // "0"
+    pub external: Option<String>,             // "0x0"
+    pub preset_key: Option<String>,           // "6"
+    pub max_volume: Option<String>,           // "100"
+    pub audio_channel_config: Option<String>, // "1.0"
+
+    // Service Support
+    pub plm_support: Option<String>,          // "0x300006"
+    pub lbc_support: Option<String>,          // "0"
+    pub mqtt_support: Option<String>,         // "1"
+    pub prompt_status: Option<String>,        // "1"
+    pub alexa_ver: Option<String>,            // "20180604"
+    pub alexa_beta_enable: Option<String>,    // "1"
+    pub alexa_force_beta_cfg: Option<String>, // "1"
+    pub dsp_ver: Option<String>,              // "0"
+
+    // Power and Battery
+    pub battery: Option<String>,         // "0"
+    pub battery_percent: Option<String>, // "0"
+    pub power_mode: Option<String>,      // "-1"
+
+    // Security
+    pub securemode: Option<String>,                       // "1"
+    pub security: Option<String>,                         // "https/2.0"
+    pub security_version: Option<String>,                 // "3.0"
+    pub security_capabilities: Option<serde_json::Value>, // JSON object
+    pub public_https_version: Option<String>,             // "1.0"
+    pub privacy_mode: Option<String>,                     // "0"
+
+    // Network Services
+    pub ota_interface_ver: Option<String>,        // "2.0"
+    pub upnp_version: Option<String>,             // "1005"
+    pub upnp_uuid: Option<String>,                // "uuid:FF970016-A6FE-22C1-660A-B4D8FF970016"
+    pub uart_pass_port: Option<String>,           // "0"
+    pub communication_port: Option<String>,       // "8819"
+    pub web_firmware_update_hide: Option<String>, // "0"
+
+    // Service Versions
+    pub tidal_version: Option<String>,   // "2.0"
+    pub service_version: Option<String>, // "1.0"
+    #[serde(rename = "EQ_support")]
+    pub eq_support: Option<String>, // "Eq10HP_ver_1.0"
+    #[serde(rename = "EQVersion")]
+    pub eq_version: Option<String>, // "4.3"
+    #[serde(rename = "HiFiSRC_version")]
+    pub hifi_src_version: Option<String>, // "1.0"
+
+    // Bluetooth Remote
+    #[serde(rename = "BleRemoteControl")]
+    pub ble_remote_control: Option<String>, // "1"
+    #[serde(rename = "BleRemoteConnected")]
+    pub ble_remote_connected: Option<String>, // "0"
+    #[serde(rename = "BleRemoteException")]
+    pub ble_remote_exception: Option<String>, // "0"
+
+    // Miscellaneous
+    #[serde(rename = "autoSenseVersion")]
+    pub auto_sense_version: Option<String>, // "1.0"
+    pub set_play_mode_enable: Option<String>, // "0"
 }
 
 /// Current playback state of the device
@@ -735,26 +851,7 @@ mod tests {
     fn test_status_ex_rssi_dbm() {
         let mut status_ex = StatusEx {
             rssi: Some("-30".to_string()),
-            wlan_data_rate: None,
-            wlan_freq: None,
-            wifi_channel: None,
-            bssid: None,
-            netstat: None,
-            internet: None,
-            apcli0: None,
-            essid: None,
-            language: None,
-            ssid: None,
-            firmware: None,
-            hardware: None,
-            device_name: None,
-            group_name: None,
-            uuid: None,
-            mac: None,
-            bt_mac: None,
-            capability: None,
-            streams: None,
-            preset_key: None,
+            ..Default::default()
         };
 
         assert_eq!(status_ex.rssi_dbm(), Some(-30));
@@ -771,27 +868,8 @@ mod tests {
     #[test]
     fn test_status_ex_data_rate_mbps() {
         let mut status_ex = StatusEx {
-            rssi: None,
             wlan_data_rate: Some("390".to_string()),
-            wlan_freq: None,
-            wifi_channel: None,
-            bssid: None,
-            netstat: None,
-            internet: None,
-            apcli0: None,
-            essid: None,
-            language: None,
-            ssid: None,
-            firmware: None,
-            hardware: None,
-            device_name: None,
-            group_name: None,
-            uuid: None,
-            mac: None,
-            bt_mac: None,
-            capability: None,
-            streams: None,
-            preset_key: None,
+            ..Default::default()
         };
 
         assert_eq!(status_ex.data_rate_mbps(), Some(390));
@@ -809,26 +887,7 @@ mod tests {
     fn test_status_ex_signal_quality() {
         let mut status_ex = StatusEx {
             rssi: Some("-30".to_string()),
-            wlan_data_rate: None,
-            wlan_freq: None,
-            wifi_channel: None,
-            bssid: None,
-            netstat: None,
-            internet: None,
-            apcli0: None,
-            essid: None,
-            language: None,
-            ssid: None,
-            firmware: None,
-            hardware: None,
-            device_name: None,
-            group_name: None,
-            uuid: None,
-            mac: None,
-            bt_mac: None,
-            capability: None,
-            streams: None,
-            preset_key: None,
+            ..Default::default()
         };
 
         // Test Excellent signal (>= -50)
@@ -855,27 +914,8 @@ mod tests {
     #[test]
     fn test_status_ex_has_internet() {
         let mut status_ex = StatusEx {
-            rssi: None,
-            wlan_data_rate: None,
-            wlan_freq: None,
-            wifi_channel: None,
-            bssid: None,
-            netstat: None,
             internet: Some("1".to_string()),
-            apcli0: None,
-            essid: None,
-            language: None,
-            ssid: None,
-            firmware: None,
-            hardware: None,
-            device_name: None,
-            group_name: None,
-            uuid: None,
-            mac: None,
-            bt_mac: None,
-            capability: None,
-            streams: None,
-            preset_key: None,
+            ..Default::default()
         };
 
         // Test connected
@@ -893,27 +933,8 @@ mod tests {
     #[test]
     fn test_status_ex_wifi_frequency_ghz() {
         let mut status_ex = StatusEx {
-            rssi: None,
-            wlan_data_rate: None,
             wlan_freq: Some("5805".to_string()),
-            wifi_channel: None,
-            bssid: None,
-            netstat: None,
-            internet: None,
-            apcli0: None,
-            essid: None,
-            language: None,
-            ssid: None,
-            firmware: None,
-            hardware: None,
-            device_name: None,
-            group_name: None,
-            uuid: None,
-            mac: None,
-            bt_mac: None,
-            capability: None,
-            streams: None,
-            preset_key: None,
+            ..Default::default()
         };
 
         assert_eq!(status_ex.wifi_frequency_ghz(), Some("5.8 GHz".to_string()));
@@ -937,24 +958,7 @@ mod tests {
             rssi: Some("-30".to_string()),
             wlan_data_rate: Some("390".to_string()),
             wlan_freq: Some("5805".to_string()),
-            wifi_channel: None,
-            bssid: None,
-            netstat: None,
-            internet: None,
-            apcli0: None,
-            essid: None,
-            language: None,
-            ssid: None,
-            firmware: None,
-            hardware: None,
-            device_name: None,
-            group_name: None,
-            uuid: None,
-            mac: None,
-            bt_mac: None,
-            capability: None,
-            streams: None,
-            preset_key: None,
+            ..Default::default()
         };
 
         assert_eq!(status_ex.rssi_formatted(), Some("-30 dBm".to_string()));
@@ -967,39 +971,142 @@ mod tests {
     #[test]
     fn test_status_ex_deserialization() {
         let json_response = r#"{
-            "RSSI": "-30",
-            "wlanDataRate": "390",
-            "wlanFreq": "5805",
-            "WifiChannel": "0",
-            "BSSID": "8c:25:05:1c:41:40",
-            "netstat": "2",
-            "internet": "1",
-            "apcli0": "192.168.4.62",
-            "essid": "4C6966656E674F66666963655F3547",
             "language": "en_us",
-            "ssid": "WiiM Mini-8FA2",
-            "firmware": "Linkplay.4.6.425351",
+            "ssid": "WiiM Mini-5932",
+            "hideSSID": "0",
+            "firmware": "Linkplay.4.6.719753",
+            "build": "release",
+            "project": "Muzo_Mini",
+            "priv_prj": "Muzo_Mini",
+            "Release": "20250611",
+            "FW_Release_version": "",
+            "PCB_version": "0",
+            "group": "0",
+            "wmrm_version": "4.2",
+            "wmrm_sub_ver": "1",
+            "expired": "0",
+            "internet": "1",
+            "uuid": "FF970016B757B9F1D547CE42",
+            "MAC": "9C:B8:B4:9E:59:32",
+            "BT_MAC": "9C:B8:B4:9E:59:33",
+            "AP_MAC": "9E:B8:B4:9E:59:32",
+            "date": "2025:07:18",
+            "time": "04:56:40",
+            "netstat": "2",
+            "essid": "656265727570",
+            "apcli0": "192.168.86.52",
+            "eth0": "0.0.0.0",
+            "ETH_MAC": "00:00:00:00:00:00",
             "hardware": "ALLWINNER-R328",
-            "DeviceName": "WiiM Mini-8FA2",
-            "GroupName": "WiiM Mini-8FA2",
-            "uuid": "FF970016A6FE22C1660AB4D8",
-            "MAC": "08:E9:F6:8F:8F:A2",
-            "BT_MAC": "08:E9:F6:8F:8F:A3",
-            "capability": "0x20084000",
-            "streams": "0x1edffbfd",
-            "preset_key": "6"
+            "ota_api_ver": "3.0",
+            "VersionUpdate": "0",
+            "NewVer": "0",
+            "mcu_ver": "0",
+            "mcu_ver_new": "0",
+            "update_check_count": "8",
+            "BleRemote_update_checked_counter": "0",
+            "ra0": "10.10.10.254",
+            "temp_uuid": "D90ABDB01001CFD8",
+            "cap1": "0x400",
+            "capability": "0x20084008",
+            "languages": "0x1ec",
+            "prompt_status": "1",
+            "alexa_ver": "20180604",
+            "alexa_beta_enable": "0",
+            "alexa_force_beta_cfg": "0",
+            "dsp_ver": "0",
+            "ModuleColorNumber": "0",
+            "ModuleColorString": "",
+            "streams_all": "0xffffbfd",
+            "streams": "0xffffbfd",
+            "region": "unknown",
+            "volume_control": "0",
+            "external": "0x0",
+            "preset_key": "12",
+            "plm_support": "0x300006",
+            "mqtt_support": "1",
+            "lbc_support": "0",
+            "WifiChannel": "0",
+            "RSSI": "-45",
+            "BSSID": "70:3A:CB:0A:D3:48",
+            "wlanSnr": "35",
+            "wlanNoise": "-92",
+            "wlanFreq": "5745",
+            "wlanDataRate": "390",
+            "battery": "0",
+            "battery_percent": "0",
+            "securemode": "1",
+            "ota_interface_ver": "2.0",
+            "upnp_version": "1005",
+            "upnp_uuid": "uuid:FF970016-B757-B9F1-D547-CE42FF970016",
+            "uart_pass_port": "0",
+            "communication_port": "8819",
+            "web_firmware_update_hide": "0",
+            "tidal_version": "2.0",
+            "service_version": "1.0",
+            "EQ_support": "Eq4p_ver_3.0",
+            "EQVersion": "4.3",
+            "audio_channel_config": "1.0",
+            "app_timezone_id": "America/Chicago",
+            "avs_timezone_id": "America/Chicago",
+            "tz_info_ver": "1.0",
+            "tz": "-5.0",
+            "HiFiSRC_version": "1.0",
+            "max_volume": "100",
+            "power_mode": "-1",
+            "security": "https/2.0",
+            "security_version": "3.0",
+            "security_capabilities": {
+                "ver": "1.0",
+                "aes_ver": "1.0"
+            },
+            "public_https_version": "1.0",
+            "BleRemoteControl": "1",
+            "BleRemoteConnected": "0",
+            "BleRemoteException": "0",
+            "autoSenseVersion": "1.0",
+            "set_play_mode_enable": "0",
+            "privacy_mode": "0",
+            "DeviceName": "WiiM Mini-5932",
+            "GroupName": "WiiM Mini-5932"
         }"#;
 
         let status_ex: StatusEx = serde_json::from_str(json_response).unwrap();
 
-        assert_eq!(status_ex.rssi, Some("-30".to_string()));
+        // Test core fields
+        assert_eq!(status_ex.language, Some("en_us".to_string()));
+        assert_eq!(status_ex.ssid, Some("WiiM Mini-5932".to_string()));
+        assert_eq!(status_ex.firmware, Some("Linkplay.4.6.719753".to_string()));
+        assert_eq!(status_ex.device_name, Some("WiiM Mini-5932".to_string()));
+        assert_eq!(status_ex.hardware, Some("ALLWINNER-R328".to_string()));
+
+        // Test network fields
+        assert_eq!(status_ex.rssi, Some("-45".to_string()));
         assert_eq!(status_ex.wlan_data_rate, Some("390".to_string()));
-        assert_eq!(status_ex.wlan_freq, Some("5805".to_string()));
-        assert_eq!(status_ex.device_name, Some("WiiM Mini-8FA2".to_string()));
-        assert_eq!(status_ex.firmware, Some("Linkplay.4.6.425351".to_string()));
+        assert_eq!(status_ex.wlan_freq, Some("5745".to_string()));
+        assert_eq!(status_ex.wlan_snr, Some("35".to_string()));
+        assert_eq!(status_ex.wlan_noise, Some("-92".to_string()));
+        assert_eq!(status_ex.apcli0, Some("192.168.86.52".to_string()));
+
+        // Test new fields from real device
+        assert_eq!(status_ex.pcb_version, Some("0".to_string()));
+        assert_eq!(status_ex.wmrm_sub_ver, Some("1".to_string()));
+        assert_eq!(status_ex.ota_api_ver, Some("3.0".to_string()));
+        assert_eq!(status_ex.mqtt_support, Some("1".to_string()));
+        assert_eq!(
+            status_ex.app_timezone_id,
+            Some("America/Chicago".to_string())
+        );
+        assert_eq!(status_ex.max_volume, Some("100".to_string()));
+        assert_eq!(status_ex.eq_version, Some("4.3".to_string()));
+
+        // Test helper methods
         assert_eq!(status_ex.has_internet(), true);
-        assert_eq!(status_ex.rssi_dbm(), Some(-30));
+        assert_eq!(status_ex.rssi_dbm(), Some(-45));
         assert_eq!(status_ex.data_rate_mbps(), Some(390));
         assert_eq!(status_ex.signal_quality(), Some("Excellent".to_string()));
+
+        // Test security capabilities JSON object
+        assert!(status_ex.security_capabilities.is_some());
     }
 }
