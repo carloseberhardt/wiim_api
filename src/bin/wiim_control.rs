@@ -458,6 +458,41 @@ fn render_template(template: &str, context: &TemplateContext) -> WiimResult<Stri
         .map_err(|e| wiim_api::WiimError::InvalidResponse(format!("Template render error: {e}")))
 }
 
+async fn load_config(config_path: &Option<PathBuf>) -> Result<Config, Box<dyn std::error::Error>> {
+    let config_file = match config_path {
+        Some(path) => path.clone(),
+        None => {
+            let config_dir = dirs::config_dir()
+                .ok_or("Could not find config directory")?
+                .join("wiim-control");
+
+            // Create config directory if it doesn't exist
+            if !config_dir.exists() {
+                fs::create_dir_all(&config_dir).await?;
+
+                // Create default config file
+                let default_config = Config::default();
+                let config_content = format!("device_ip = \"{}\"\n", default_config.device_ip);
+                let config_file = config_dir.join("config.toml");
+                fs::write(&config_file, config_content).await?;
+                eprintln!("Created default config at: {}", config_file.display());
+                return Ok(default_config);
+            }
+
+            config_dir.join("config.toml")
+        }
+    };
+
+    // Try to read config file
+    if config_file.exists() {
+        let content = fs::read_to_string(&config_file).await?;
+        let config: Config = toml::from_str(&content)?;
+        Ok(config)
+    } else {
+        Ok(Config::default())
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -489,7 +524,7 @@ mod tests {
         assert_eq!(context.album, Some("Test Album".to_string()));
         assert_eq!(context.state, "playing");
         assert_eq!(context.volume, 75);
-        assert_eq!(context.muted, false);
+        assert!(!context.muted);
         assert_eq!(context.position, "1:00");
         assert_eq!(context.duration, "3:00");
         assert_eq!(context.sample_rate_khz, Some("44kHz".to_string()));
@@ -521,7 +556,7 @@ mod tests {
         assert_eq!(context.album, None);
         assert_eq!(context.state, "stopped");
         assert_eq!(context.volume, 50);
-        assert_eq!(context.muted, true);
+        assert!(context.muted);
         assert_eq!(context.position, "0:00");
         assert_eq!(context.duration, "0:00");
         assert_eq!(context.sample_rate_khz, None);
@@ -643,45 +678,10 @@ mod tests {
         assert_eq!(context.bit_depth_bit, Some("24bit".to_string()));
         assert_eq!(context.quality_info, Some("96kHz/24bit".to_string()));
         assert_eq!(context.volume, 85);
-        assert_eq!(context.muted, true);
+        assert!(context.muted);
         assert!(context.full_info.contains("Volume: 85%"));
         assert!(context.full_info.contains("🔇 Muted"));
         assert!(context.full_info.contains("Quality: 96kHz/24bit"));
         assert!(context.full_info.contains("Time: 2:05 / 4:05"));
-    }
-}
-
-async fn load_config(config_path: &Option<PathBuf>) -> Result<Config, Box<dyn std::error::Error>> {
-    let config_file = match config_path {
-        Some(path) => path.clone(),
-        None => {
-            let config_dir = dirs::config_dir()
-                .ok_or("Could not find config directory")?
-                .join("wiim-control");
-
-            // Create config directory if it doesn't exist
-            if !config_dir.exists() {
-                fs::create_dir_all(&config_dir).await?;
-
-                // Create default config file
-                let default_config = Config::default();
-                let config_content = format!("device_ip = \"{}\"\n", default_config.device_ip);
-                let config_file = config_dir.join("config.toml");
-                fs::write(&config_file, config_content).await?;
-                eprintln!("Created default config at: {}", config_file.display());
-                return Ok(default_config);
-            }
-
-            config_dir.join("config.toml")
-        }
-    };
-
-    // Try to read config file
-    if config_file.exists() {
-        let content = fs::read_to_string(&config_file).await?;
-        let config: Config = toml::from_str(&content)?;
-        Ok(config)
-    } else {
-        Ok(Config::default())
     }
 }
