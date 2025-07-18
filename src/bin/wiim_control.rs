@@ -107,47 +107,47 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         }
         Commands::Play => {
             client.resume().await?;
-            println!("▶️ Playing");
+            eprintln!("▶️ Playing");
         }
         Commands::Pause => {
             client.pause().await?;
-            println!("⏸️ Paused");
+            eprintln!("⏸️ Paused");
         }
         Commands::Toggle => {
             client.toggle_play_pause().await?;
-            println!("⏯️ Toggled");
+            eprintln!("⏯️ Toggled");
         }
         Commands::Stop => {
             client.stop().await?;
-            println!("⏹️ Stopped");
+            eprintln!("⏹️ Stopped");
         }
         Commands::Next => {
             client.next_track().await?;
-            println!("⏭️ Next track");
+            eprintln!("⏭️ Next track");
         }
         Commands::Prev => {
             client.previous_track().await?;
-            println!("⏮️ Previous track");
+            eprintln!("⏮️ Previous track");
         }
         Commands::Volume { level } => {
             client.set_volume(level).await?;
-            println!("🔊 Volume set to {level}%");
+            eprintln!("🔊 Volume set to {level}%");
         }
         Commands::VolumeUp { step } => {
             let new_volume = client.volume_up(Some(step)).await?;
-            println!("🔊 Volume up to {new_volume}%");
+            eprintln!("🔊 Volume up to {new_volume}%");
         }
         Commands::VolumeDown { step } => {
             let new_volume = client.volume_down(Some(step)).await?;
-            println!("🔊 Volume down to {new_volume}%");
+            eprintln!("🔊 Volume down to {new_volume}%");
         }
         Commands::Mute => {
             client.mute().await?;
-            println!("🔇 Muted");
+            eprintln!("🔇 Muted");
         }
         Commands::Unmute => {
             client.unmute().await?;
-            println!("🔊 Unmuted");
+            eprintln!("🔊 Unmuted");
         }
     }
 
@@ -266,7 +266,7 @@ async fn load_config(config_path: &Option<PathBuf>) -> Result<Config, Box<dyn st
                 let config_content = format!("device_ip = \"{}\"\n", default_config.device_ip);
                 let config_file = config_dir.join("config.toml");
                 fs::write(&config_file, config_content).await?;
-                println!("Created default config at: {}", config_file.display());
+                eprintln!("Created default config at: {}", config_file.display());
                 return Ok(default_config);
             }
 
