@@ -44,6 +44,7 @@
 use reqwest::Client;
 use serde::Deserialize;
 use std::fmt;
+use std::time::Duration;
 use thiserror::Error;
 
 /// Errors that can occur when using the WiiM API
@@ -186,6 +187,8 @@ impl WiimClient {
         // Configure client to accept self-signed certificates (WiiM devices use them)
         let client = Client::builder()
             .danger_accept_invalid_certs(true)
+            .connect_timeout(Duration::from_secs(5))
+            .timeout(Duration::from_secs(10))
             .build()
             .expect("Failed to create HTTP client");
 
