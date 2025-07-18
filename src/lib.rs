@@ -7,6 +7,7 @@
 //! - **Now Playing Info**: Get current track metadata including title, artist, album, and cover art
 //! - **Playback Control**: Play, pause, stop, next/previous track
 //! - **Volume Control**: Set volume, relative volume changes, mute/unmute
+//! - **Device Information**: Get network quality, WiFi signal strength, and device details
 //! - **Connection Management**: Test connectivity and configure target IP
 //!
 //! ## Quick Start
@@ -25,6 +26,15 @@
 //!         now_playing.artist.unwrap_or_default(),
 //!         now_playing.title.unwrap_or_default()
 //!     );
+//!
+//!     // Get device and network information
+//!     let status_ex = client.get_status_ex().await?;
+//!     if let Some(signal) = status_ex.signal_quality() {
+//!         println!("📶 WiFi Signal: {} ({})",
+//!             signal,
+//!             status_ex.rssi_formatted().unwrap_or_default()
+//!         );
+//!     }
 //!
 //!     // Control playback
 //!     client.set_volume(75).await?;
@@ -108,6 +118,48 @@ pub struct MetaData {
 pub struct MetaInfo {
     #[serde(rename = "metaData")]
     pub meta_data: MetaData,
+}
+
+/// Extended device status response from getStatusEx API
+#[derive(Debug, Deserialize)]
+pub struct StatusEx {
+    // Network Quality Fields
+    #[serde(rename = "RSSI")]
+    pub rssi: Option<String>, // "-30"
+    #[serde(rename = "wlanDataRate")]
+    pub wlan_data_rate: Option<String>, // "390"
+    #[serde(rename = "wlanFreq")]
+    pub wlan_freq: Option<String>, // "5805"
+    #[serde(rename = "WifiChannel")]
+    pub wifi_channel: Option<String>, // "0"
+    #[serde(rename = "BSSID")]
+    pub bssid: Option<String>, // "8c:25:05:1c:41:40"
+
+    // Network Status
+    pub netstat: Option<String>,  // "2"
+    pub internet: Option<String>, // "1"
+    pub apcli0: Option<String>,   // "192.168.4.62"
+    pub essid: Option<String>,    // Network SSID (encoded)
+
+    // Device Information
+    pub language: Option<String>, // "en_us"
+    pub ssid: Option<String>,     // "WiiM Mini-8FA2"
+    pub firmware: Option<String>, // "Linkplay.4.6.425351"
+    pub hardware: Option<String>, // "ALLWINNER-R328"
+    #[serde(rename = "DeviceName")]
+    pub device_name: Option<String>, // "WiiM Mini-8FA2"
+    #[serde(rename = "GroupName")]
+    pub group_name: Option<String>, // "WiiM Mini-8FA2"
+
+    // Additional device fields
+    pub uuid: Option<String>,
+    #[serde(rename = "MAC")]
+    pub mac: Option<String>,
+    #[serde(rename = "BT_MAC")]
+    pub bt_mac: Option<String>,
+    pub capability: Option<String>,
+    pub streams: Option<String>,
+    pub preset_key: Option<String>,
 }
 
 /// Current playback state of the device
@@ -420,6 +472,92 @@ impl WiimClient {
         self.send_command("setPlayerCmd:prev").await?;
         Ok(())
     }
+
+    /// Get comprehensive device and network status information
+    ///
+    /// This method calls the `getStatusEx` API endpoint to retrieve detailed
+    /// information about the device including network quality, WiFi signal strength,
+    /// device information, and connectivity status.
+    ///
+    /// # Examples
+    /// ```no_run
+    /// use wiim_api::WiimClient;
+    ///
+    /// #[tokio::main]
+    /// async fn main() -> wiim_api::Result<()> {
+    ///     let client = WiimClient::new("192.168.1.100");
+    ///
+    ///     let status = client.get_status_ex().await?;
+    ///
+    ///     // Check network quality
+    ///     if let Some(quality) = status.signal_quality() {
+    ///         println!("Signal Quality: {}", quality);
+    ///     }
+    ///
+    ///     // Check internet connectivity
+    ///     if status.has_internet() {
+    ///         println!("Device is connected to the internet");
+    ///     }
+    ///
+    ///     // Get formatted network info
+    ///     if let Some(signal) = status.rssi_formatted() {
+    ///         println!("WiFi Signal: {}", signal);
+    ///     }
+    ///
+    ///     Ok(())
+    /// }
+    /// ```
+    pub async fn get_status_ex(&self) -> Result<StatusEx> {
+        let response = self.send_command("getStatusEx").await?;
+        let status: StatusEx = serde_json::from_str(&response)?;
+        Ok(status)
+    }
+}
+
+impl StatusEx {
+    /// Parse RSSI value to integer (dBm)
+    pub fn rssi_dbm(&self) -> Option<i32> {
+        self.rssi.as_ref()?.parse().ok()
+    }
+
+    /// Get WiFi data rate in Mbps
+    pub fn data_rate_mbps(&self) -> Option<u32> {
+        self.wlan_data_rate.as_ref()?.parse().ok()
+    }
+
+    /// Calculate signal quality indicator
+    pub fn signal_quality(&self) -> Option<String> {
+        match self.rssi_dbm()? {
+            rssi if rssi >= -50 => Some("Excellent".to_string()),
+            rssi if rssi >= -60 => Some("Good".to_string()),
+            rssi if rssi >= -70 => Some("Fair".to_string()),
+            _ => Some("Poor".to_string()),
+        }
+    }
+
+    /// Check if device has internet connectivity
+    pub fn has_internet(&self) -> bool {
+        self.internet.as_ref().is_some_and(|v| v == "1")
+    }
+
+    /// Format WiFi frequency in GHz
+    pub fn wifi_frequency_ghz(&self) -> Option<String> {
+        let freq_mhz: f64 = self.wlan_freq.as_ref()?.parse().ok()?;
+        let freq_ghz = freq_mhz / 1000.0;
+        Some(format!("{freq_ghz:.1} GHz"))
+    }
+
+    /// Format RSSI with unit
+    pub fn rssi_formatted(&self) -> Option<String> {
+        let rssi = self.rssi_dbm()?;
+        Some(format!("{rssi} dBm"))
+    }
+
+    /// Format WiFi data rate with unit
+    pub fn data_rate_formatted(&self) -> Option<String> {
+        let rate = self.data_rate_mbps()?;
+        Some(format!("{rate} Mbps"))
+    }
 }
 
 #[cfg(test)]
@@ -590,5 +728,278 @@ mod tests {
         } else {
             panic!("Expected InvalidResponse error");
         }
+    }
+
+    // StatusEx Tests
+    #[test]
+    fn test_status_ex_rssi_dbm() {
+        let mut status_ex = StatusEx {
+            rssi: Some("-30".to_string()),
+            wlan_data_rate: None,
+            wlan_freq: None,
+            wifi_channel: None,
+            bssid: None,
+            netstat: None,
+            internet: None,
+            apcli0: None,
+            essid: None,
+            language: None,
+            ssid: None,
+            firmware: None,
+            hardware: None,
+            device_name: None,
+            group_name: None,
+            uuid: None,
+            mac: None,
+            bt_mac: None,
+            capability: None,
+            streams: None,
+            preset_key: None,
+        };
+
+        assert_eq!(status_ex.rssi_dbm(), Some(-30));
+
+        // Test invalid RSSI
+        status_ex.rssi = Some("invalid".to_string());
+        assert_eq!(status_ex.rssi_dbm(), None);
+
+        // Test None RSSI
+        status_ex.rssi = None;
+        assert_eq!(status_ex.rssi_dbm(), None);
+    }
+
+    #[test]
+    fn test_status_ex_data_rate_mbps() {
+        let mut status_ex = StatusEx {
+            rssi: None,
+            wlan_data_rate: Some("390".to_string()),
+            wlan_freq: None,
+            wifi_channel: None,
+            bssid: None,
+            netstat: None,
+            internet: None,
+            apcli0: None,
+            essid: None,
+            language: None,
+            ssid: None,
+            firmware: None,
+            hardware: None,
+            device_name: None,
+            group_name: None,
+            uuid: None,
+            mac: None,
+            bt_mac: None,
+            capability: None,
+            streams: None,
+            preset_key: None,
+        };
+
+        assert_eq!(status_ex.data_rate_mbps(), Some(390));
+
+        // Test invalid data rate
+        status_ex.wlan_data_rate = Some("invalid".to_string());
+        assert_eq!(status_ex.data_rate_mbps(), None);
+
+        // Test None data rate
+        status_ex.wlan_data_rate = None;
+        assert_eq!(status_ex.data_rate_mbps(), None);
+    }
+
+    #[test]
+    fn test_status_ex_signal_quality() {
+        let mut status_ex = StatusEx {
+            rssi: Some("-30".to_string()),
+            wlan_data_rate: None,
+            wlan_freq: None,
+            wifi_channel: None,
+            bssid: None,
+            netstat: None,
+            internet: None,
+            apcli0: None,
+            essid: None,
+            language: None,
+            ssid: None,
+            firmware: None,
+            hardware: None,
+            device_name: None,
+            group_name: None,
+            uuid: None,
+            mac: None,
+            bt_mac: None,
+            capability: None,
+            streams: None,
+            preset_key: None,
+        };
+
+        // Test Excellent signal (>= -50)
+        status_ex.rssi = Some("-30".to_string());
+        assert_eq!(status_ex.signal_quality(), Some("Excellent".to_string()));
+
+        // Test Good signal (-50 to -60)
+        status_ex.rssi = Some("-55".to_string());
+        assert_eq!(status_ex.signal_quality(), Some("Good".to_string()));
+
+        // Test Fair signal (-60 to -70)
+        status_ex.rssi = Some("-65".to_string());
+        assert_eq!(status_ex.signal_quality(), Some("Fair".to_string()));
+
+        // Test Poor signal (< -70)
+        status_ex.rssi = Some("-80".to_string());
+        assert_eq!(status_ex.signal_quality(), Some("Poor".to_string()));
+
+        // Test None RSSI
+        status_ex.rssi = None;
+        assert_eq!(status_ex.signal_quality(), None);
+    }
+
+    #[test]
+    fn test_status_ex_has_internet() {
+        let mut status_ex = StatusEx {
+            rssi: None,
+            wlan_data_rate: None,
+            wlan_freq: None,
+            wifi_channel: None,
+            bssid: None,
+            netstat: None,
+            internet: Some("1".to_string()),
+            apcli0: None,
+            essid: None,
+            language: None,
+            ssid: None,
+            firmware: None,
+            hardware: None,
+            device_name: None,
+            group_name: None,
+            uuid: None,
+            mac: None,
+            bt_mac: None,
+            capability: None,
+            streams: None,
+            preset_key: None,
+        };
+
+        // Test connected
+        assert_eq!(status_ex.has_internet(), true);
+
+        // Test not connected
+        status_ex.internet = Some("0".to_string());
+        assert_eq!(status_ex.has_internet(), false);
+
+        // Test None
+        status_ex.internet = None;
+        assert_eq!(status_ex.has_internet(), false);
+    }
+
+    #[test]
+    fn test_status_ex_wifi_frequency_ghz() {
+        let mut status_ex = StatusEx {
+            rssi: None,
+            wlan_data_rate: None,
+            wlan_freq: Some("5805".to_string()),
+            wifi_channel: None,
+            bssid: None,
+            netstat: None,
+            internet: None,
+            apcli0: None,
+            essid: None,
+            language: None,
+            ssid: None,
+            firmware: None,
+            hardware: None,
+            device_name: None,
+            group_name: None,
+            uuid: None,
+            mac: None,
+            bt_mac: None,
+            capability: None,
+            streams: None,
+            preset_key: None,
+        };
+
+        assert_eq!(status_ex.wifi_frequency_ghz(), Some("5.8 GHz".to_string()));
+
+        // Test 2.4GHz
+        status_ex.wlan_freq = Some("2412".to_string());
+        assert_eq!(status_ex.wifi_frequency_ghz(), Some("2.4 GHz".to_string()));
+
+        // Test invalid frequency
+        status_ex.wlan_freq = Some("invalid".to_string());
+        assert_eq!(status_ex.wifi_frequency_ghz(), None);
+
+        // Test None frequency
+        status_ex.wlan_freq = None;
+        assert_eq!(status_ex.wifi_frequency_ghz(), None);
+    }
+
+    #[test]
+    fn test_status_ex_formatted_methods() {
+        let status_ex = StatusEx {
+            rssi: Some("-30".to_string()),
+            wlan_data_rate: Some("390".to_string()),
+            wlan_freq: Some("5805".to_string()),
+            wifi_channel: None,
+            bssid: None,
+            netstat: None,
+            internet: None,
+            apcli0: None,
+            essid: None,
+            language: None,
+            ssid: None,
+            firmware: None,
+            hardware: None,
+            device_name: None,
+            group_name: None,
+            uuid: None,
+            mac: None,
+            bt_mac: None,
+            capability: None,
+            streams: None,
+            preset_key: None,
+        };
+
+        assert_eq!(status_ex.rssi_formatted(), Some("-30 dBm".to_string()));
+        assert_eq!(
+            status_ex.data_rate_formatted(),
+            Some("390 Mbps".to_string())
+        );
+    }
+
+    #[test]
+    fn test_status_ex_deserialization() {
+        let json_response = r#"{
+            "RSSI": "-30",
+            "wlanDataRate": "390",
+            "wlanFreq": "5805",
+            "WifiChannel": "0",
+            "BSSID": "8c:25:05:1c:41:40",
+            "netstat": "2",
+            "internet": "1",
+            "apcli0": "192.168.4.62",
+            "essid": "4C6966656E674F66666963655F3547",
+            "language": "en_us",
+            "ssid": "WiiM Mini-8FA2",
+            "firmware": "Linkplay.4.6.425351",
+            "hardware": "ALLWINNER-R328",
+            "DeviceName": "WiiM Mini-8FA2",
+            "GroupName": "WiiM Mini-8FA2",
+            "uuid": "FF970016A6FE22C1660AB4D8",
+            "MAC": "08:E9:F6:8F:8F:A2",
+            "BT_MAC": "08:E9:F6:8F:8F:A3",
+            "capability": "0x20084000",
+            "streams": "0x1edffbfd",
+            "preset_key": "6"
+        }"#;
+
+        let status_ex: StatusEx = serde_json::from_str(json_response).unwrap();
+
+        assert_eq!(status_ex.rssi, Some("-30".to_string()));
+        assert_eq!(status_ex.wlan_data_rate, Some("390".to_string()));
+        assert_eq!(status_ex.wlan_freq, Some("5805".to_string()));
+        assert_eq!(status_ex.device_name, Some("WiiM Mini-8FA2".to_string()));
+        assert_eq!(status_ex.firmware, Some("Linkplay.4.6.425351".to_string()));
+        assert_eq!(status_ex.has_internet(), true);
+        assert_eq!(status_ex.rssi_dbm(), Some(-30));
+        assert_eq!(status_ex.data_rate_mbps(), Some(390));
+        assert_eq!(status_ex.signal_quality(), Some("Excellent".to_string()));
     }
 }
