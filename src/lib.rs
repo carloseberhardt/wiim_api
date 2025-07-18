@@ -150,20 +150,20 @@ impl WiimClient {
     fn parse_volume(vol_str: &str) -> Result<u8> {
         vol_str
             .parse()
-            .map_err(|_| WiimError::InvalidResponse(format!("Invalid volume value: {}", vol_str)))
+            .map_err(|_| WiimError::InvalidResponse(format!("Invalid volume value: {vol_str}")))
     }
 
     /// Parse duration string to u64 with proper error handling
     fn parse_duration(duration_str: &str) -> Result<u64> {
         duration_str.parse().map_err(|_| {
-            WiimError::InvalidResponse(format!("Invalid duration value: {}", duration_str))
+            WiimError::InvalidResponse(format!("Invalid duration value: {duration_str}"))
         })
     }
 
     /// Parse position string to u64 with proper error handling
     fn parse_position(position_str: &str) -> Result<u64> {
         position_str.parse().map_err(|_| {
-            WiimError::InvalidResponse(format!("Invalid position value: {}", position_str))
+            WiimError::InvalidResponse(format!("Invalid position value: {position_str}"))
         })
     }
 
@@ -449,7 +449,7 @@ mod tests {
         let valid_volumes = [0, 1, 50, 99, 100];
         for volume in valid_volumes {
             // The validation logic: if volume > 100
-            assert!(!(volume > 100), "Volume {} should be valid", volume);
+            assert!(volume <= 100, "Volume {} should be valid", volume);
         }
 
         // These values should fail the validation check (volume > 100)
