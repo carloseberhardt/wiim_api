@@ -1,0 +1,15 @@
+{
+    "custom/music": {
+        "exec": "wiim-control --format json status",
+        "return-type": "json",
+        "interval": 1,
+        "max-length": 50,
+        "on-click": "wiim-control toggle",
+        "on-click-right": "wiim-control next",
+        "on-click-middle": "wiim-control prev",
+        "on-scroll-up": "wiim-control volume-up",
+        "on-scroll-down": "wiim-control volume-down",
+        "format": "{text}",
+        "tooltip": true
+    }
+}

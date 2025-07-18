@@ -1,0 +1,23 @@
+[package]
+name = "wiim_api"
+version = "0.1.0"
+edition = "2024"
+license = "MIT OR Apache-2.0"
+description = "A Rust library for controlling WiiM audio streaming devices via their HTTP API"
+repository = "https://github.com/your-username/wiim_api"
+keywords = ["wiim", "audio", "streaming", "api", "music"]
+categories = ["api-bindings", "multimedia::audio"]
+
+[[bin]]
+name = "wiim-control"
+path = "src/bin/wiim_control.rs"
+
+[dependencies]
+reqwest = { version = "0.12", features = ["json"] }
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+tokio = { version = "1.0", features = ["full"] }
+thiserror = "1.0"
+clap = { version = "4.0", features = ["derive"] }
+dirs = "5.0"
+toml = "0.8"

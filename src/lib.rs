@@ -1,0 +1,385 @@
+//! # WiiM API Client
+//!
+//! A Rust library for controlling WiiM audio streaming devices via their HTTP API.
+//!
+//! ## Features
+//!
+//! - **Now Playing Info**: Get current track metadata including title, artist, album, and cover art
+//! - **Playback Control**: Play, pause, stop, next/previous track
+//! - **Volume Control**: Set volume, relative volume changes, mute/unmute
+//! - **Connection Management**: Test connectivity and configure target IP
+//!
+//! ## Quick Start
+//!
+//! ```no_run
+//! use wiim_api::{WiimClient, Result};
+//!
+//! #[tokio::main]
+//! async fn main() -> Result<()> {
+//!     // Connect to your WiiM device
+//!     let client = WiimClient::connect("192.168.1.100").await?;
+//!
+//!     // Get now playing information
+//!     let now_playing = client.get_now_playing().await?;
+//!     println!("♪ {} - {}", 
+//!         now_playing.artist.unwrap_or_default(),
+//!         now_playing.title.unwrap_or_default()
+//!     );
+//!
+//!     // Control playback
+//!     client.set_volume(75).await?;
+//!     client.pause().await?;
+//!     
+//!     Ok(())
+//! }
+//! ```
+//!
+//! ## Finding Your Device IP
+//!
+//! - Check your router's admin page (usually 192.168.1.1)
+//! - Use network scanner apps
+//! - Check the WiiM mobile app settings
+//! - Use command: `nmap -sn 192.168.1.0/24`
+
+use reqwest::Client;
+use serde::Deserialize;
+use std::fmt;
+use thiserror::Error;
+
+/// Errors that can occur when using the WiiM API
+#[derive(Error, Debug)]
+pub enum WiimError {
+    #[error("HTTP request failed: {0}")]
+    Request(#[from] reqwest::Error),
+    #[error("JSON parsing failed: {0}")]
+    Json(#[from] serde_json::Error),
+    #[error("Invalid response: {0}")]
+    InvalidResponse(String),
+}
+
+/// Result type for WiiM API operations
+pub type Result<T> = std::result::Result<T, WiimError>;
+
+/// HTTP client for communicating with WiiM devices
+#[derive(Debug, Clone)]
+pub struct WiimClient {
+    base_url: String,
+    client: Client,
+}
+
+/// Raw player status response from the WiiM device
+#[derive(Debug, Deserialize)]
+pub struct PlayerStatus {
+    #[serde(rename = "type")]
+    pub device_type: String,
+    pub ch: String,
+    pub mode: String,
+    #[serde(rename = "loop")]
+    pub loop_mode: String,
+    pub eq: String,
+    pub status: String,
+    pub curpos: String,
+    pub offset_pts: String,
+    pub totlen: String,
+    pub alarmflag: String,
+    pub plicount: String,
+    pub plicurr: String,
+    pub vol: String,
+    pub mute: String,
+}
+
+/// Track metadata from the WiiM device
+#[derive(Debug, Deserialize)]
+pub struct MetaData {
+    pub album: Option<String>,
+    pub title: Option<String>,
+    pub artist: Option<String>,
+    #[serde(rename = "albumArtURI")]
+    pub album_art_uri: Option<String>,
+    #[serde(rename = "sampleRate")]
+    pub sample_rate: Option<String>,
+    #[serde(rename = "bitDepth")]
+    pub bit_depth: Option<String>,
+}
+
+/// Container for track metadata response
+#[derive(Debug, Deserialize)]
+pub struct MetaInfo {
+    #[serde(rename = "metaData")]
+    pub meta_data: MetaData,
+}
+
+/// Current playback state of the device
+#[derive(Debug, Clone)]
+pub enum PlayState {
+    Playing,
+    Paused,
+    Stopped,
+    Loading,
+}
+
+impl fmt::Display for PlayState {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            PlayState::Playing => write!(f, "playing"),
+            PlayState::Paused => write!(f, "paused"),
+            PlayState::Stopped => write!(f, "stopped"),
+            PlayState::Loading => write!(f, "loading"),
+        }
+    }
+}
+
+/// Complete now playing information combining playback status and track metadata
+#[derive(Debug, Clone)]
+pub struct NowPlaying {
+    pub title: Option<String>,
+    pub artist: Option<String>,
+    pub album: Option<String>,
+    pub album_art_uri: Option<String>,
+    pub state: PlayState,
+    pub volume: u8,
+    pub is_muted: bool,
+    pub position_ms: u64,
+    pub duration_ms: u64,
+    pub sample_rate: Option<String>,
+    pub bit_depth: Option<String>,
+}
+
+impl WiimClient {
+    /// Create a new client with the device's IP address
+    /// 
+    /// # Examples
+    /// ```
+    /// use wiim_api::WiimClient;
+    /// 
+    /// let client = WiimClient::new("192.168.1.100");
+    /// let client_with_https = WiimClient::new("https://192.168.1.100");
+    /// ```
+    pub fn new(ip_address: &str) -> Self {
+        let base_url = if ip_address.starts_with("http") {
+            ip_address.to_string()
+        } else {
+            format!("https://{}", ip_address)
+        };
+
+        // Configure client to accept self-signed certificates (WiiM devices use them)
+        let client = Client::builder()
+            .danger_accept_invalid_certs(true)
+            .build()
+            .expect("Failed to create HTTP client");
+
+        Self {
+            base_url,
+            client,
+        }
+    }
+
+    /// Create a client and test connection to ensure the device is reachable
+    /// 
+    /// # Examples
+    /// ```no_run
+    /// use wiim_api::WiimClient;
+    /// 
+    /// #[tokio::main]
+    /// async fn main() -> wiim_api::Result<()> {
+    ///     let client = WiimClient::connect("192.168.1.100").await?;
+    ///     println!("Connected to WiiM device!");
+    ///     Ok(())
+    /// }
+    /// ```
+    pub async fn connect(ip_address: &str) -> Result<Self> {
+        let client = Self::new(ip_address);
+        
+        // Test connection by getting device status
+        client.get_player_status().await?;
+        
+        Ok(client)
+    }
+
+    /// Change the IP address of an existing client
+    /// 
+    /// # Examples
+    /// ```
+    /// use wiim_api::WiimClient;
+    /// 
+    /// let mut client = WiimClient::new("192.168.1.100");
+    /// client.set_ip_address("192.168.1.101");
+    /// ```
+    pub fn set_ip_address(&mut self, ip_address: &str) {
+        self.base_url = if ip_address.starts_with("http") {
+            ip_address.to_string()
+        } else {
+            format!("https://{}", ip_address)
+        };
+    }
+
+    /// Get the current IP address/URL being used
+    pub fn get_ip_address(&self) -> &str {
+        &self.base_url
+    }
+
+    /// Test if the device is reachable
+    /// 
+    /// # Examples
+    /// ```no_run
+    /// use wiim_api::WiimClient;
+    /// 
+    /// #[tokio::main]
+    /// async fn main() -> wiim_api::Result<()> {
+    ///     let client = WiimClient::new("192.168.1.100");
+    ///     
+    ///     if client.test_connection().await.is_ok() {
+    ///         println!("Device is reachable!");
+    ///     } else {
+    ///         println!("Device is not reachable");
+    ///     }
+    ///     Ok(())
+    /// }
+    /// ```
+    pub async fn test_connection(&self) -> Result<()> {
+        self.get_player_status().await?;
+        Ok(())
+    }
+
+    async fn send_command(&self, command: &str) -> Result<String> {
+        let url = format!("{}/httpapi.asp?command={}", self.base_url, command);
+        let response = self.client.get(&url).send().await?;
+        let text = response.text().await?;
+        Ok(text)
+    }
+
+    pub async fn get_player_status(&self) -> Result<PlayerStatus> {
+        let response = self.send_command("getPlayerStatus").await?;
+        let status: PlayerStatus = serde_json::from_str(&response)?;
+        Ok(status)
+    }
+
+    pub async fn get_meta_info(&self) -> Result<MetaInfo> {
+        let response = self.send_command("getMetaInfo").await?;
+        let meta: MetaInfo = serde_json::from_str(&response)?;
+        Ok(meta)
+    }
+
+    pub async fn get_now_playing(&self) -> Result<NowPlaying> {
+        let (status, meta) = tokio::try_join!(
+            self.get_player_status(),
+            self.get_meta_info()
+        )?;
+
+        let state = match status.status.as_str() {
+            "play" => PlayState::Playing,
+            "pause" => PlayState::Paused,
+            "stop" => PlayState::Stopped,
+            "loading" => PlayState::Loading,
+            _ => PlayState::Stopped,
+        };
+
+        let volume = status.vol.parse().unwrap_or(0);
+        let is_muted = status.mute == "1";
+        let position_ms = status.curpos.parse().unwrap_or(0);
+        let duration_ms = status.totlen.parse().unwrap_or(0);
+
+        Ok(NowPlaying {
+            title: meta.meta_data.title,
+            artist: meta.meta_data.artist,
+            album: meta.meta_data.album,
+            album_art_uri: meta.meta_data.album_art_uri,
+            state,
+            volume,
+            is_muted,
+            position_ms,
+            duration_ms,
+            sample_rate: meta.meta_data.sample_rate,
+            bit_depth: meta.meta_data.bit_depth,
+        })
+    }
+
+    pub async fn set_volume(&self, volume: u8) -> Result<()> {
+        let volume = volume.min(100);
+        let command = format!("setPlayerCmd:vol:{}", volume);
+        self.send_command(&command).await?;
+        Ok(())
+    }
+
+    /// Increase volume by specified amount (default 5)
+    pub async fn volume_up(&self, step: Option<u8>) -> Result<u8> {
+        let step = step.unwrap_or(5);
+        let current_status = self.get_player_status().await?;
+        let current_volume: u8 = current_status.vol.parse().unwrap_or(0);
+        let new_volume = (current_volume.saturating_add(step)).min(100);
+        self.set_volume(new_volume).await?;
+        Ok(new_volume)
+    }
+
+    /// Decrease volume by specified amount (default 5)
+    pub async fn volume_down(&self, step: Option<u8>) -> Result<u8> {
+        let step = step.unwrap_or(5);
+        let current_status = self.get_player_status().await?;
+        let current_volume: u8 = current_status.vol.parse().unwrap_or(0);
+        let new_volume = current_volume.saturating_sub(step);
+        self.set_volume(new_volume).await?;
+        Ok(new_volume)
+    }
+
+    pub async fn mute(&self) -> Result<()> {
+        self.send_command("setPlayerCmd:mute:1").await?;
+        Ok(())
+    }
+
+    pub async fn unmute(&self) -> Result<()> {
+        self.send_command("setPlayerCmd:mute:0").await?;
+        Ok(())
+    }
+
+    pub async fn pause(&self) -> Result<()> {
+        self.send_command("setPlayerCmd:pause").await?;
+        Ok(())
+    }
+
+    pub async fn resume(&self) -> Result<()> {
+        self.send_command("setPlayerCmd:resume").await?;
+        Ok(())
+    }
+
+    pub async fn toggle_play_pause(&self) -> Result<()> {
+        self.send_command("setPlayerCmd:onepause").await?;
+        Ok(())
+    }
+
+    pub async fn stop(&self) -> Result<()> {
+        self.send_command("setPlayerCmd:stop").await?;
+        Ok(())
+    }
+
+    pub async fn next_track(&self) -> Result<()> {
+        self.send_command("setPlayerCmd:next").await?;
+        Ok(())
+    }
+
+    pub async fn previous_track(&self) -> Result<()> {
+        self.send_command("setPlayerCmd:prev").await?;
+        Ok(())
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_client_creation() {
+        let client = WiimClient::new("192.168.1.100");
+        assert_eq!(client.base_url, "https://192.168.1.100");
+
+        let client2 = WiimClient::new("https://192.168.1.100");
+        assert_eq!(client2.base_url, "https://192.168.1.100");
+    }
+
+    #[test]
+    fn test_play_state_display() {
+        assert_eq!(PlayState::Playing.to_string(), "playing");
+        assert_eq!(PlayState::Paused.to_string(), "paused");
+        assert_eq!(PlayState::Stopped.to_string(), "stopped");
+        assert_eq!(PlayState::Loading.to_string(), "loading");
+    }
+}
